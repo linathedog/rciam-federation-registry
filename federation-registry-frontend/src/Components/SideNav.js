@@ -31,7 +31,7 @@ export const SideNav = (props) => {
         :null}
         <div className='nav-side-category'> 
           <div className='nav-title'>FEDERATION</div>
-          <Link to={"/"+props.tenant_name+"/service_overview"}>All Services</Link>
+          <Link to={"/"+props.tenant_name+"/service_overview"}>{t('all_services')}</Link>
         </div>
     </div>
     </Nav>

@@ -6,8 +6,11 @@ import Table from 'react-bootstrap/Table';
 // import Badge from 'react-bootstrap/Badge';
 import LogoContainer from './LogoContainer.js';
 // const {capitalWords} = require('./helpers.js');
+import { useTranslation } from 'react-i18next';
+
 
 const ServiceTable = ({services}) => {
+  const { t, i18n } = useTranslation();
 
     // Define a default UI for filtering
     function SearchFilter({
@@ -75,7 +78,7 @@ const ServiceTable = ({services}) => {
           }
         },
         {
-          Header: 'Service Name',
+          Header: t('service_name'),
           Filter: SearchFilter,
           accessor: 'service_name', // accessor is the "key" in the data
           Cell: props => {
@@ -87,7 +90,7 @@ const ServiceTable = ({services}) => {
           }
         },
         {
-          Header: 'Service Description',
+          Header: t('service_description'),
           accessor: 'service_description',
           disableFilters: true,
           disableSortBy: true,

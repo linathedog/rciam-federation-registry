@@ -17,11 +17,13 @@ import OutdatedNotifications from '../Components/OutdatedNotifications.js';
 import ServiceOverviewPage from '../ServiceOverviewPage.js';
 import { useCookies } from 'react-cookie';
 //import { useParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 
 
 const Routes = (props) => {
   const [tenant] = useContext(tenantContext);
+  const { t, i18n } = useTranslation();
 
   return(
   <div className="content-container">
@@ -64,7 +66,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          New Service
+          {t('new_service')}
         </div>
         <CopyService user={props.user}/>
       </ProtectedRoute>
@@ -74,7 +76,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          New Service
+          {t('new_service')}
         </div>
         <NewService user={props.user}/>
       </ProtectedRoute>
@@ -94,7 +96,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          Edit Service
+          {t('edit_service')}
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
@@ -120,7 +122,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          Edit Service
+          {t('edit_service')}
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
@@ -130,7 +132,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          Edit Service
+          {t('edit_service')}
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
@@ -209,7 +211,7 @@ const Routes = (props) => {
             <span className="link-seperator">/</span>
             <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            View Service
+            {t('view_service')}
           </div>
           <ViewService/>
       </ProtectedRoute>

@@ -615,7 +615,7 @@ export function SelectEnvironment(props){
               placement='right'
               overlay={
                 <Tooltip id={`tooltip-right`}>
-                  Copy Service
+                  Copy Node
                 </Tooltip>
               }
             >

@@ -228,7 +228,7 @@ const ServiceTable = ({services}) => {
                 </tr>
               )
             }):
-              <tr><td colSpan={4}><span className='service-overview-no-services'>No services to display...</span></td></tr>
+              <tr><td colSpan={4}><span className='service-overview-no-services'>No nodes to display...</span></td></tr>
             }
           </tbody>
         </Table>

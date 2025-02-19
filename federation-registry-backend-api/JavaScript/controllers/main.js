@@ -124,7 +124,6 @@ const approvePetition = (req,res,next,db) => {
           service_id = petition.meta_data.service_id;
           await t.batch([
             t.service_details.delete(petition.meta_data.service_id),
-            t.organizations.activate(petition.service_data.organization_id),
             t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.tenant)
           ]);
         }

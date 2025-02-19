@@ -47,7 +47,7 @@ const EditService = (props) => {
     useEffect(()=>{
       if(petitionData&&props.review){
         if(petitionData.metadata.status==='changes'){
-          setModalMessage('This request has already been reviewed and changes have been requested from the service owners');
+          setModalMessage(t('requested_changes_modal_message'));
         }
         if(petitionData.metadata.status==='request_review'&&!user.actions.includes('review_restricted')){
           setModalMessage('This request is under review from a different user group')
@@ -539,7 +539,7 @@ const ViewService = (props)=>{
         <React.Fragment>        
           {service.created_at?
             <Alert variant='primary' className='form-alert'>
-              Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
+              {t("service_registered_at")}<b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
             </Alert>:null}
           <ServiceForm initialValues={service} user={user} disabled={true} copyButton={true} owned={serviceState.owned} {...props}/>
         </React.Fragment>
@@ -616,7 +616,7 @@ const RequestedChangesAlert = (props) => {
           }
           {props.tab1?<ServiceForm user={user} disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
-      <Tab eventKey="service" title="View Deployed Service">
+      <Tab eventKey="service" title={t("view_deployed_service")}>
         {props.tab2?<ServiceForm user={user} initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>

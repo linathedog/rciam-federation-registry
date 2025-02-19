@@ -34,7 +34,7 @@ const CopyDialog = (props) => {
             </Modal.Header>
 
             <Modal.Body>
-              <p>Select the environment to register a copy of this service:</p>
+              <p>Select the environment to register a copy of this node:</p>
               <select name="pets" id="pet-select"  defaultValue={copyOptions[0]} onChange={(e) =>{setCopyEnv(e.target.value);}}>
                 {copyOptions.map((env,index)=>{
                   return <option key={index} value={env}>{capitalWords(env)}</option>
@@ -56,7 +56,7 @@ const CopyDialog = (props) => {
               <React.Fragment>
                 <Button variant="secondary">
 
-                Copy Service
+                Copy Node
 
                 </Button>
               </React.Fragment>

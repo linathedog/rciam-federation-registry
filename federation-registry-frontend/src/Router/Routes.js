@@ -162,7 +162,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          {"Contact Owners"}
+          {"Contact Owner"}
         </div>
         <BroadcastNotifications type="owners" user={props.user}/>
       </ProtectedRoute>
@@ -172,7 +172,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
-          {"Contact Owners"}
+          {"Contact Owner"}
         </div>
         <BroadcastNotifications type="owners" user={props.user}/>
       </ProtectedRoute>
@@ -241,7 +241,7 @@ const Routes = (props) => {
             <span className="link-seperator">/</span>
             <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            View Service
+            {t("view_service")}
           </div>
           <ViewService/>
       </ProtectedRoute>
@@ -251,7 +251,7 @@ const Routes = (props) => {
             <span className="link-seperator">/</span>
             <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            View Service
+            {t("view_service")}
           </div>
           <ViewService/>
       </ProtectedRoute>
@@ -261,7 +261,7 @@ const Routes = (props) => {
             <span className="link-seperator">/</span>
             <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            View Service
+            {t("view_service")}
           </div>
           <ViewService/>
       </ProtectedRoute>

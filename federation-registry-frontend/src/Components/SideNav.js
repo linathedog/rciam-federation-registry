@@ -19,18 +19,18 @@ export const SideNav = (props) => {
         </div>
         <div className="nav-side-category">
           <div className="nav-title">PERSONAL</div>
-          <Link to={"/"+props.tenant_name+"/invitations"}>Invitations</Link>
+          {/* <Link to={"/"+props.tenant_name+"/invitations"}>Invitations</Link> */}
           <Link to={"/"+props.tenant_name+"/userinfo"}>User Information</Link>
         </div>
-        {user?.actions.includes('send_notifications')?
+        {/* {user?.actions.includes('send_notifications')?
           <div className="nav-side-category">
             <div className="nav-title">NOTIFICATIONS</div>
             <Link to={"/"+props.tenant_name+"/notifications/broadcast"}>Broadcast Message</Link>
             <Link to={"/"+props.tenant_name+"/notifications/outdated"}>Oudated Alert</Link>
           </div>
-        :null}
+        :null} */}
         <div className='nav-side-category'> 
-          <div className='nav-title'>FEDERATION</div>
+          <div className='nav-title'>NODE CATALOG</div>
           <Link to={"/"+props.tenant_name+"/service_overview"}>{t('all_services')}</Link>
         </div>
     </div>

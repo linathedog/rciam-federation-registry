@@ -58,7 +58,7 @@ class ServiceRepository {
               service_id = result.id;
               queries.push(t.service_details_protocol.add('service',service,result.id));
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
-              queries.push(t.service_state.add(result.id,'pending','create'));
+              queries.push(t.service_state.add(result.id,service.protocol==='node'?'deployed':'pending','create'));
               queries.push(t.service_multi_valued.addServiceBoolean('service',service,result.id));
               if(service.protocol==='oidc'){
                 if(service.grant_types&&service.grant_types.length>0){
@@ -101,7 +101,7 @@ class ServiceRepository {
         return t.service.get(targetId,tenant).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState,tenant);
-            let startDeployment = requiredDeployment(oldState.service_data,newState);
+            let startDeployment = newState.protocol==='node'?false:requiredDeployment(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('service',edits.details,targetId));               

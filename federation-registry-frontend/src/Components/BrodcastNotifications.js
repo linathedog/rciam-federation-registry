@@ -171,7 +171,7 @@ const BroadcastNotifications = (props) =>{
           })
         }
         initialValues_owners.recipients = owner_emails;
-        initialValues_owners.email_body ="Dear Service Owners \n \n /* Comments will be Removed Automatically */ \n/* Write Your Message Here */\n\n\n/* Leave the Following line to include a  button with a link to the Reconfiguration Page*/\n --* Reconfiguration Link *--\n\n /* Write Your Closing Here */"
+        initialValues_owners.email_body = t("broadcast_placeholder")
         setFormValues(initialValues_owners);
       }
     });

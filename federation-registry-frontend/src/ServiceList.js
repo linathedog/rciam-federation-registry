@@ -461,7 +461,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else if(response.status===404){
-          setNotFound('Could not find service');
+          setNotFound(t("service_not_found"));
           return false;
         }
         else{
@@ -566,8 +566,8 @@ const ServiceList= (props)=> {
         {outdatedCount>0?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
-              <span>{outdatedCount}</span>{' '}
-               of the services you own are not up to date with the lastest requirements. Click{' '}
+              <span>{outdatedCount}</span>
+               {t("outdated_message")}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showOutdated:true,showOwned:true}); setShowNotification(false);}}>here</span>
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
@@ -596,7 +596,7 @@ const ServiceList= (props)=> {
                   placement='top'
                   overlay={
                     <Tooltip id={`tooltip-top`}>
-                      Export filtered Services to a CSV file 
+                      {t("export_tooltip")} 
                     </Tooltip>
                   }
                 > 
@@ -645,7 +645,7 @@ const ServiceList= (props)=> {
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:reg_after or :reg_before) =yyyy/mm/dd to search by registration date in the Search Input.
+                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by tag':''} and (:reg_after or :reg_before) =yyyy/mm/dd to search by registration date in the Search Input.
                         </Tooltip>
                       }
                     >
@@ -789,7 +789,7 @@ const ServiceList= (props)=> {
                                 placement='top'
                                 overlay={
                                     <Tooltip id={`tooltip-top`}>
-                                      Show services whose configuration needs to be updated
+                                      {t("outdated_tooltip")}
                                     </Tooltip>
                                   }
                                 >
@@ -798,13 +798,13 @@ const ServiceList= (props)=> {
                       <input type='checkbox' name='filter' checked={filters.showOutdated} onChange={()=> setFilters({...filters,showOutdated:!filters.showOutdated})}/>
                     </div>
                   </OverlayTrigger>
-                  {user.actions.includes('get_service')?
+                  {/* {user.actions.includes('get_service')?
                     <React.Fragment>
                       <OverlayTrigger
                                 placement='top'
                                 overlay={
                                     <Tooltip id={`tooltip-top`}>
-                                      Show services having no owner
+                                      {t("ownerless_tooltip")}
                                     </Tooltip>
                                   }
                                 >
@@ -842,7 +842,7 @@ const ServiceList= (props)=> {
                           return <option value={item} key={index}>{capitalWords(item)}</option>
                         })}
                       </select>
-                  </div>
+                  </div> */}
                 </div>
               </Col>
             </Row>
@@ -871,7 +871,7 @@ const ServiceList= (props)=> {
               </React.Fragment>
             </tbody>
           </Table>
-          <div className='service-count'>{'('+serviceCount+ " Total Services)"}</div>
+          <div className='service-count'>{'('+serviceCount+ " "+ t("total_services")+")"}</div>
           <Pagination>{paginationItems}</Pagination>
         </LoadingBar>
         <ProcessingRequest active={asyncResponse}/>
@@ -905,22 +905,21 @@ function TableItem(props) {
   return (
     <tr>
       <td className="petition-details">
-
-        <div className="integration-environment-container">
-          <ManageTags manageTags={manageTags} setManageTags={setManageTags} tags={props.service.tags?props.service.tags:[]} service_id={props.service.service_id} getServices={props.getServices}/>
+        <ManageTags manageTags={manageTags} setManageTags={setManageTags} tags={props.service.tags?props.service.tags:[]} service_id={props.service.service_id} getServices={props.getServices}/>
+        {/* <div className="integration-environment-container">
           <h5>
           <OverlayTrigger
             placement='top'
             overlay={
               <Tooltip id={`tooltip-top`}>
-                {'Service '+(props.service.type==='create'?'will be':'is') +' integrated in the ' +props.service.integration_environment + ' environment'}
+                {t("service")+' '+(props.service.type==='create'?'will be':'is') +' integrated in the ' +props.service.integration_environment + ' environment'}
               </Tooltip>
             }
           >
             <Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('integrationEnvironment',props.service.integration_environment); props.setExpandFilters(true);}} variant={variant}> {capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
           </OverlayTrigger>
           </h5>
-        </div>
+        </div> */}
 
         <div className="table-image-container">
           <LogoContainer url={props.service.logo_uri}/>
@@ -986,7 +985,7 @@ function TableItem(props) {
                   placement='top'
                   overlay={
                     <Tooltip id={`tooltip-top`}>
-                      {props.service.state==='error'&&user.actions.includes('view_errors')?'Deployment error click to view':'View Service'}
+                      {props.service.state==='error'&&user.actions.includes('view_errors')?'Deployment error click to view':t("view_service")}
                     </Tooltip>
                   }
                 >
@@ -1011,7 +1010,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?"Service needs to be updated":(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
+                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?t("outdated_alert"):(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -1070,15 +1069,15 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              {/* {props.service.service_id && props.service.state==='deployed' && props.service.owned?
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={"#"} onClick={()=>{
                     toggleCopyDialog();
-                  }}>Copy Service</Link>
+                  }}>Copy Node</Link>
                 </div>
               </Dropdown.Item>
-              :null}
+              :null} */}
               {props.service.owned && props.service.state==='deployed'&& props.service.status!=='request_review' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
@@ -1120,16 +1119,16 @@ function TableItem(props) {
                 <Dropdown.Item as='span'>
                   <Link to={{
                     pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"/requests/"+props.service.petition_id)+"/groups/"+props.service.group_id+"/contact"
-                  }}>Contact Owners</Link>
+                  }}>Contact Owner</Link>
                 </Dropdown.Item>
               :null}
-              <Dropdown.Item as='span'>
+              {/* <Dropdown.Item as='span'>
                 <div>
                   <Link to={{
                     pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"/requests/"+props.service.petition_id)+"/groups/"+props.service.group_id
                   }}>{props.service.group_manager||user.actions.includes('invite_to_group')?t('manage_group'):t('view_group')}</Link>
                 </div>
-              </Dropdown.Item>
+              </Dropdown.Item> */}
 
               {props.service.service_id?
                 <Dropdown.Item as='span'>

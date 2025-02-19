@@ -125,7 +125,7 @@ const InvitationsPage = (props) => {
                 <Row >
                   <Col className="d-flex">
 
-                  <div className="justify-content-center align-self-center"><h3> You have been invited by <span className="fake-link"><a href={reg.test(String(invitation.invited_by).toLowerCase())?"mailto: "+invitation.invited_by:null}>{invitation.invited_by}</a></span> to manage a service named: {invitation.service_name?invitation.service_name:'Name not yet defined'}</h3> </div>
+                  <div className="justify-content-center align-self-center"><h3> You have been invited by <span className="fake-link"><a href={reg.test(String(invitation.invited_by).toLowerCase())?"mailto: "+invitation.invited_by:null}>{invitation.invited_by}</a></span> {t("invitation_message")} {invitation.service_name?invitation.service_name:'Name not yet defined'}</h3> </div>
                   </Col>
                   <Col md="auto" className="d-flex">
                     <div className="justify-content-center align-self-center">

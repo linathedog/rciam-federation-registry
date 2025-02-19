@@ -80,7 +80,7 @@ const DeploymentTroubleshooting = (props) => {
                 setConfirmation();
               }
           }}
-          title={"Are you sure you want to coninue with this action?"} message={"By selecting yes you will retrigger the deployment of the service request"} accept={'Yes'} decline={'No'}/>
+          title={"Are you sure you want to coninue with this action?"} message={"By selecting yes you will retrigger the deployment of the node request"} accept={'Yes'} decline={'No'}/>
         <Alert show={true} variant={props.deploymentError?"danger":"warning"} style={{marginTop:'1rem'}}>
           <Alert.Heading><b>{props.deploymentError?("Deployment Error: "+props.deploymentError.error_code):"Troubleshoot Deployment"}</b></Alert.Heading>
           <p style={{marginTop:'1rem'}}>
@@ -96,7 +96,7 @@ const DeploymentTroubleshooting = (props) => {
                 
                 <b>
                  WARNING:
-                </b> The following actions should only be performed by or after contacting the technical team of Federation Registry as it might create issues for the target service.
+                </b> The following actions should only be performed by or after contacting the technical team of Federation Registry as it might create issues for the target node.
                 
               </React.Fragment>          
             }
@@ -174,7 +174,7 @@ const DeploymentTroubleshooting = (props) => {
                         </strong>
                       </Row>
                       <Row className="review-option-desc">
-                        Revert service to the previous deployed state
+                        Revert node to the previous deployed state
                       </Row>
                     </Col>
                   </Row>

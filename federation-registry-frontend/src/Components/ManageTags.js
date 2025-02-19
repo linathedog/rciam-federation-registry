@@ -152,10 +152,10 @@ const ManageTags = (props) => {
     return(
       <React.Fragment>
         <MessageModal active={alertMessage} close={()=>{setAlertMessage()}} title={alertMessage} />
-        <ConfirmationModal active={tagToDelete?true:false} close={()=>{setTagToDelete()}} action={()=>{deleteTag(tagToDelete);}} title={'Are you sure you want to remove the tag '+ tagToDelete + ' from this service?' } accept={'Yes'} decline={'No'}/>
+        <ConfirmationModal active={tagToDelete?true:false} close={()=>{setTagToDelete()}} action={()=>{deleteTag(tagToDelete);}} title={'Are you sure you want to remove the tag '+ tagToDelete + ' from this node?' } accept={'Yes'} decline={'No'}/>
         <Modal show={props.manageTags} onHide={handleClose}>
           <Modal.Header closeButton>
-            <Modal.Title>Manage Service Tags
+            <Modal.Title>Manage Node Tags
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>

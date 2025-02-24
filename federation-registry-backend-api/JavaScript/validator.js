@@ -312,7 +312,7 @@ const serviceValidationRules = (options, req) => {
       let tenant = options.tenant_param ? req.params.tenant : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
       let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
       let general_requirement = !required(value, req, path.match(/\[(.*?)\]/)[1], 'country');
-      let tenant_requirement = tenant_config[tenant].form.more_info.country.required.includes(integration_environment);
+      let tenant_requirement = tenant_config[tenant].form.more_info.country?.required?.includes(integration_environment);
       return !(general_requirement && tenant_requirement)
     }).withMessage('Country code missing').
       customSanitizer(value => {
@@ -616,6 +616,7 @@ const serviceValidationRules = (options, req) => {
       }
       return success
     }).withMessage('Invalid Scope value'),
+    body('*.endpoint').if((value, { req, location, path }) => { return value && req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'node' }).trim().exists({ checkFalsy: true }).withMessage('Node endpoint missing').isString().withMessage('Node endpoint must be a string').custom((value) => value.match(reg.regUrl)).withMessage('Node endpoint must be a secure url https://'),
     body('*.grant_types').if((value, { req, location, path }) => { return value && req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'oidc' }).isArray().withMessage('grant_types must be an array').custom((value, { req, location, path }) => {
       let success = true;
       let tenant = options.tenant_param ? req.params.tenant : req.body[path.match(/\[(.*?)\]/)[1]].tenant;

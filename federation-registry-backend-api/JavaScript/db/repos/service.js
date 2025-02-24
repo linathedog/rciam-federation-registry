@@ -51,7 +51,6 @@ class ServiceRepository {
         let service_id;
         return this.db.tx('add-service',async t =>{
           let queries = [];
-
           service.group_id = group_id;
           return await t.service_details.add(service,requester).then(async result=>{
             if(result){
@@ -82,7 +81,6 @@ class ServiceRepository {
               return t.batch(queries);
             }
           });
-
         }).then(data => {
           return service_id;
         }).catch(stuff=>{
@@ -157,7 +155,7 @@ class ServiceRepository {
       'reuse_refresh_token',sd.reuse_refresh_token,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,\
       'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,\
       'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,\
-      'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
+      'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,sd.entity_id,'endpoint',sd.endpoint,'pid',sd.pid,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
       'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\

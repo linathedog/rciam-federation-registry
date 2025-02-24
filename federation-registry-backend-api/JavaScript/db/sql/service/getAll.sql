@@ -15,5 +15,6 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 	FROM ((SELECT *,CASE WHEN (SELECT json_agg((v.tag)) FROM service_tags v WHERE service_details.id=v.service_id) IS NULL THEN ARRAY[]::varchar[] ELSE (SELECT array_agg((v.tag)) FROM service_tags v WHERE service_details.id=v.service_id) END as tags FROM service_details WHERE deleted=false ${integration_environment_filter:raw} ${protocol_filter:raw}) AS bar LEFT JOIN service_state USING (id)) AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)
+	LEFT JOIN service_details_node USING (id)
 	LEFT JOIN organizations USING(organization_id) WHERE tenant=${tenant}) as sd
 WHERE deleted=false ${protocol_id_filter:raw} ${tags_filter:raw} ${exclude_tags_filter:raw}

@@ -6,7 +6,7 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
 						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,
-						 'entity_id',sd.entity_id,'group_id',sd.group_id,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,'application_type',sd.application_type,
+						 'entity_id',sd.entity_id,'endpoint',sd.endpoint,'pid',sd.pid,'group_id',sd.group_id,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,'application_type',sd.application_type,
 						 'requester',sd.requester,'service_id',sd.service_id,'type',sd.type,'comment',CASE 
 							WHEN ${hide_comments:raw} = TRUE AND sd.status = 'request_review' THEN NULL 
 							ELSE sd.comment 
@@ -37,4 +37,5 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 	FROM (SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL AND tenant=${tenant}) AS foo
 	LEFT JOIN service_petition_details_oidc USING (id)
 	LEFT JOIN service_petition_details_saml USING (id)
+	LEFT JOIN service_petition_details_node USING (id)
 	LEFT JOIN organizations USING(organization_id)) as sd

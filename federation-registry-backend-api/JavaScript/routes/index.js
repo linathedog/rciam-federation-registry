@@ -1,7 +1,8 @@
 require('dotenv').config();
 const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatServiceBooleanForValidation} = require('../validator.js');
 const qs = require('qs');
-const {v1:uuidv1} = require('uuid');const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
+const {v1:uuidv1} = require('uuid');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
 const {getUserFromClaims} = require('../functions/util_functions.js')
 const {db} = require('../db');
 var router = require('express').Router();

@@ -174,7 +174,7 @@ const DeploymentTroubleshooting = (props) => {
                         </strong>
                       </Row>
                       <Row className="review-option-desc">
-                        Revert node to the previous deployed state
+                        Revert node to the previous verified state
                       </Row>
                     </Col>
                   </Row>

@@ -2,8 +2,6 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import mapValues from 'lodash/mapValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faBan, faSortDown, faExclamationTriangle, faPen } from '@fortawesome/free-solid-svg-icons';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import CopyDialog from './Components/CopyDialog.js'
@@ -29,9 +27,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import { SimpleInput, CountrySelect, AuthMethRadioList, SelectEnvironment, DeviceCode, Select, PublicKey, ListInput, LogoInput, TextAria, ListInputArray, CheckboxList, SimpleCheckbox, ClientSecret, TimeInput, RefreshToken, Contacts, OrganizationField, SimpleRadio, MetadataInput } from './Components/Inputs.js'// eslint-disable-next-line
-import { SamlAttributesInput } from './Components/SamlAttributes.js';
-import { ConfirmationModal } from './Components/Modals';
+import { SimpleInput, CountrySelect, SelectEnvironment, LogoInput, TextAria, SimpleCheckbox, Contacts, OrganizationField } from './Components/Inputs.js'// eslint-disable-next-line
 
 
 
@@ -64,6 +60,7 @@ const ServiceForm = (props) => {
   const [disabled, setDisabled] = useState(false);
   const [disabledOrganizationFields, setDisabledOrganizationFields] = useState([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  // eslint-disable-next-line
   const [metadataWarning, setMetadataWarning] = useState();
   const [metadataLoaded, setMetadataLoaded] = useState({
     supported_attributes: [],
@@ -420,6 +417,10 @@ const ServiceForm = (props) => {
           return true
         }
       })).unique(t('yup_redirect_uri_unique'))
+    }),
+    endpoint: yup.string().nullable().when('protocol', {
+      is: 'node',
+      then: yup.string().nullable().matches(reg.regUrl, 'Node endpoint must be be a secure url starting with https://')
     }),
     logo_uri: yup.string().nullable().matches(reg.regUrl, 'Logo must be be a secure url starting with https://').test('testImage', t('yup_image_url'), function (imageUrl) {
       imageExists(imageUrl);
@@ -1105,6 +1106,26 @@ return (
                     />
                   </InputRow>
                 }
+                {Object.entries(tenant.form_config.extra_fields).map(([name, field_data]) => {
+                  field_data.name = name;
+                  return (field_data.tab === 'general' && field_data.tag !== 'once' ? <React.Fragment key={name}>
+                    {generateInput({
+                      field_data,
+                      initialValues: props.initialValues,
+                      values,
+                      errors,
+                      touched,
+                      changes: props.changes,
+                      handleChange,
+                      hasSubmitted,
+                      disabled,
+                      service_id,
+                      handleBlur,
+                      tenant
+                    })}
+                  </React.Fragment> : null)
+                })
+                }
                 <InputRow moreInfo={{}} title={t('form_logo')}>
                   <LogoInput
                     value={values.logo_uri ? values.logo_uri : ''}
@@ -1161,10 +1182,10 @@ return (
                 </InputRow>
                 {tenant.form_config.extra_fields.organization && !tenant?.form_config?.extra_fields?.organization?.hide.includes(values.integration_environment) ?
                   <React.Fragment>
-                    <InputRow moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
+                    <InputRow moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Legal Entity" description="Search for your legal entity" error={errors.organization_name} touched={touched.organization_name}>
                       <OrganizationField
                         name='organization_name'
-                        placeholder='Type the name of your organization'
+                        placeholder='Type the name of your legal entity'
                         onChange={handleChange}
                         values={values}
                         isInvalid={hasSubmitted ? !!errors.organization_name : (!!errors.organization_name && touched.organization_name)}
@@ -1177,7 +1198,7 @@ return (
                         changed={props.changes ? props.changes.organization_name : null}
                       />
                     </InputRow>
-                    <InputRow moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                    <InputRow moreInfo={tenant.form_config.more_info.organization_url} title="Legal entity Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the legal entity's website" error={errors.organization_url} touched={touched.organization_url}>
                       <SimpleInput
                         name='organization_url'
                         placeholder={t('form_type_prompt')}
@@ -1207,25 +1228,6 @@ return (
                     />
                     <UrlWarning url={values.policy_uri} touched={hasSubmitted || touched.policy_uri} />
                   </InputRow>
-                }
-                {Object.entries(tenant.form_config.extra_fields).map(([name, field_data]) => {
-                  field_data.name = name;
-                  return (field_data.tab === 'general' && field_data.tag !== 'once' ? <React.Fragment key={name}>
-                    {generateInput({
-                      field_data,
-                      initialValues: props.initialValues,
-                      values,
-                      errors,
-                      touched,
-                      changes: props.changes,
-                      handleChange,
-                      hasSubmitted,
-                      disabled,
-                      handleBlur,
-                      tenant
-                    })}
-                  </React.Fragment> : null)
-                })
                 }
                 <InputRow moreInfo={tenant.form_config.more_info.contacts} title={t('form_contacts')} required={true} error={typeof (errors.contacts) === 'string' ? errors.contacts : null} touched={touched.contacts} description={t('form_contacts_desc')}>
                   <Contacts
@@ -1590,7 +1592,7 @@ const generateInput = (props) => {
             changed={props.changes ? props.changes[props.field_data.name] : null}
           />
         </InputRow>
-        : props.field_data.type === 'string' ?
+        : props.field_data.type === 'string'&& (props.service_id || props.field_data.tag!=='pid')?
           <InputRow
             description={props.field_data.desc}
             moreInfo={props.tenant.form_config.more_info[props.field_data.name]}
@@ -1607,7 +1609,7 @@ const generateInput = (props) => {
               value={props.values[props.field_data.name]}
               isInvalid={props.hasSubmitted ? !!props.errors[props.field_data.name] : (!!props.errors[props.field_data.name] && props.touched[props.field_data.name])}
               onBlur={props.handleBlur}
-              disabled={props.disabled}
+              disabled={props.disabled||props.field_data.disabled}
               changed={props.changes ? props.changes[props.field_data.name] : null}
             />
             {props.field_data.tag === 'url' ?

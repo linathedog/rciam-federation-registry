@@ -1,5 +1,5 @@
 const sql = require('../sql').service_details_protocol;
-
+const {v1:uuidv1} = require('uuid');
 let cs = {}; // Reusable ColumnSet objects.
 const petition = 'petition_';
 const service = '';
@@ -14,28 +14,36 @@ class ServiceDetailsProtocolRepository {
         cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
         cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_token','clear_access_tokens_on_refresh','id_token_timeout_seconds', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'jwks', 'jwks_uri','application_type'],{table:'service_details_oidc'});
         cs.add_multiple_saml = new pgp.helpers.ColumnSet(['id','entity_id','metadata_url'],{table:'service_details_saml'});
+        cs.add_multiple_node = new pgp.helpers.ColumnSet(['id','endpoint','pid'],{table:'service_details_node'});
         // set-up all ColumnSet objects, if needed:
     }
 
     async addMultiple(services){
       let oidc = [];
       let saml = [];
+      let node = [];
       services.forEach((service,index)=> {
         if(service.protocol==='oidc'){
           oidc.push(service);
         }
-        else{
+        else if(service.protocol==='saml'){
           saml.push(service);
+        }
+        else{
+          Node.push(service);
         }
       });
       if(oidc.length>0){
         const query_1 = this.pgp.helpers.insert(oidc,cs.add_multiple_oidc);
         let done = await this.db.none(query_1).then(deta => {return true}).catch(error => {throw error});
       }
-
       if(saml.length>0){
         const query_2 = this.pgp.helpers.insert(saml,cs.add_multiple_saml);
         let done = await this.db.none(query_2).then(deta => {return true}).catch(error => {throw error});
+      }
+      if(node.length>0){
+        const query_3 = this.pgp.helpers.insert(node,cs.add_multiple_node);
+        let done = await this.db.none(query_3).then(deta => {return true}).catch(error => {throw error});
       }
       return true
     }
@@ -119,13 +127,20 @@ class ServiceDetailsProtocolRepository {
             id:+id
           })
         }
+        else if (data.protocol==='node'){
+          return this.db.one(sql.addNode,{
+            endpoint:data.endpoint,
+            pid:!type&&!data.pid?uuidv1():data.pid,
+            type:type,
+            id:+id
+          })
+        }
 
     }
 
 
 
     async update(type,data,id){
-
       if(type==='petition'){
         type=petition;
       }
@@ -157,6 +172,13 @@ class ServiceDetailsProtocolRepository {
         return this.db.none(sql.updateSaml,{
           entity_id:data.entity_id,
           metadata_url:data.metadata_url,
+          type:type,
+          id:+id
+        })
+      }
+      else if (data.protocol==='node'){
+        return this.db.none(sql.updateNode,{
+          endpoint:data.endpoint,
           type:type,
           id:+id
         })

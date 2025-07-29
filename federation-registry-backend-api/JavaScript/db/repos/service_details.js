@@ -86,8 +86,8 @@ class ServiceDetailsRepository {
       try {
         return this.db.tx('update-service',async t =>{
           let queries = [];
-          queries.push(t.service_state.update(id,'pending','delete'));
-          //queries.push(t.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id));
+          queries.push(t.service_state.update(id,'deployed','delete'));
+          queries.push(t.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id));
           var result = await t.batch(queries);
           if(result){
             return true

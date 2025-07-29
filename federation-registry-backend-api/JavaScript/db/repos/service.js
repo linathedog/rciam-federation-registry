@@ -210,7 +210,17 @@ class ServiceRepository {
     });
   }
 
- 
+ async getAllNodes(tenant){
+  const query = this.pgp.as.format(sql.getAllNodes,{tenant:tenant});
+    return await this.db.any(query).then(nodes=>{
+      if(nodes){        
+        return nodes;
+      }
+      else{
+        return null;
+      }
+    });
+ }
 
   async getPending(){
     const query = this.pgp.as.format(sql.getPending);
@@ -236,7 +246,6 @@ class ServiceRepository {
     });
   }
 }
-
 
 
 

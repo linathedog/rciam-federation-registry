@@ -179,6 +179,7 @@ class ServiceDetailsProtocolRepository {
       else if (data.protocol==='node'){
         return this.db.none(sql.updateNode,{
           endpoint:data.endpoint,
+          pid:!type&&!data.pid?uuidv1():data.pid,
           type:type,
           id:+id
         })

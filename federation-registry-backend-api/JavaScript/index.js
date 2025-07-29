@@ -12,6 +12,7 @@ const routes= require('./routes/index');
 var cookieParser = require('cookie-parser');
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 const bannerAlertRoutes = require('./routes/banner_alerts.js');
+const nodeRoutes = require('./routes/nodes.js');
 const serviceTagRoutes = require('./routes/service_tags.js');
 const notificationRoutes = require('./routes/notifications.js');
 const utilRoutes = require('./routes/util_routes.js');
@@ -148,6 +149,7 @@ app.use(express.json({ limit: '50mb' }));
 
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/tenants/:tenant/tags', serviceTagRoutes);
+app.use('/tenants/:tenant/nodes', nodeRoutes);
 app.use('/tenants/:tenant/notifications',notificationRoutes);
 app.use('/util',utilRoutes);
 

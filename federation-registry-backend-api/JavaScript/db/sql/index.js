@@ -34,6 +34,7 @@ module.exports = {
     service:{
       getAll:(sql('service/getAll.sql')),
       getService:sql('service/getService.sql'),
+      getAllNodes:sql('service/getAllNodes.sql'),
       getPending:sql('service/getPending.sql'),
       getContacts:sql('service/getContacts.sql')
     },

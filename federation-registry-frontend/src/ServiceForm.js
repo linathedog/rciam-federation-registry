@@ -232,6 +232,12 @@ const ServiceForm = (props) => {
           then: yup.boolean().oneOf([true], tenant.form_config.extra_fields[k].error)
         })
       }
+      else if (Object.keys((tenant.form_config.extra_fields)).includes(k) && tenant.form_config.extra_fields[k].type === 'string') {
+        return yup.string().when('integration_environment', {
+          is: (integration_environment) => { return tenant.form_config.extra_fields[k].required.includes(integration_environment) },
+          then: yup.string().required(t('yup_required'))
+        })
+      }
       else if (Object.keys((tenant.form_config.extra_fields)).includes(k) && k === 'aup_uri') {
         return yup.string().nullable().test('testAvailable', t('yup_url'), function (value) {
           if (!value) {
@@ -1592,7 +1598,7 @@ const generateInput = (props) => {
             changed={props.changes ? props.changes[props.field_data.name] : null}
           />
         </InputRow>
-        : props.field_data.type === 'string'&& (props.service_id || props.field_data.tag!=='pid')?
+        : props.field_data.type === 'string'?
           <InputRow
             description={props.field_data.desc}
             moreInfo={props.tenant.form_config.more_info[props.field_data.name]}

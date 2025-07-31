@@ -87,7 +87,7 @@ const ServiceForm = (props) => {
 
   useEffect(() => {
     //Get tags 
-    if (props.user.actions.includes('manage_tags') && service_id) {
+    if (props?.user?.actions?.includes('manage_tags') && service_id) {
       getTags();
     }
     countries = [];
@@ -1037,7 +1037,7 @@ return (
           <div className="tab-panel">
             {showCopyDialog ? <CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} /> : null}
             <ProcessingRequest active={asyncResponse} />
-            {props.user.actions.includes('manage_tags') && service_id ?
+            {props?.user?.actions?.includes('manage_tags') && service_id ?
               <div className='service-form-tags-container'>
                 <hr />
                 <h5>Tags</h5>
@@ -1114,6 +1114,7 @@ return (
                 }
                 {Object.entries(tenant.form_config.extra_fields).map(([name, field_data]) => {
                   field_data.name = name;
+
                   return (field_data.tab === 'general' && field_data.tag !== 'once' ? <React.Fragment key={name}>
                     {generateInput({
                       field_data,
@@ -1235,7 +1236,8 @@ return (
                     <UrlWarning url={values.policy_uri} touched={hasSubmitted || touched.policy_uri} />
                   </InputRow>
                 }
-                <InputRow moreInfo={tenant.form_config.more_info.contacts} title={t('form_contacts')} required={true} error={typeof (errors.contacts) === 'string' ? errors.contacts : null} touched={touched.contacts} description={t('form_contacts_desc')}>
+                {!props.hideContacts&&
+                  <InputRow moreInfo={tenant.form_config.more_info.contacts} title={t('form_contacts')} required={true} error={typeof (errors.contacts) === 'string' ? errors.contacts : null} touched={touched.contacts} description={t('form_contacts_desc')}>
                   <Contacts
                     values={values.contacts}
                     placeholder={t('form_type_prompt')}
@@ -1250,6 +1252,7 @@ return (
                     changed={props.changes ? props.changes.contacts : null}
                   />
                 </InputRow>
+                } 
                 {Object.entries(tenant.form_config.extra_fields).map(([name, field_data]) => {
                   field_data.name = name;
                   return (field_data.tab === 'general' && field_data.tag === 'once' ? <React.Fragment key={name}>

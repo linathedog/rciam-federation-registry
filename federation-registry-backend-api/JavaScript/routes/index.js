@@ -46,7 +46,7 @@ router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant/organizations',(req,res,next)=>{
   try{
     db.organizations.get(req.query.search_string,req.query.ror).then(organizations=>{
       if(organizations){
@@ -609,6 +609,28 @@ router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
   }
 })
 
+router.get('/tenants/:tenant/nodes/:id',(req,res,next)=>{
+    try{
+      return db.task('find-service-data',async t=>{
+            await t.service.get(req.params.id,req.params.tenant).then(async service=>{
+              if(service){
+                await t.service_state.getState(req.params.id).then(async service_state=>{
+                  await t.service_errors.getErrorByServiceId(req.params.id).then(service_error=>{
+                    delete service_state.id;
+                    res.status(200).json({service:service.service_data,owned:(false),...service_state,error:service_error});
+                  });
+                })
+                }
+              else {
+                  res.status(404).end();
+              }
+            }).catch(err=>{next(err);})
+          })
+    }
+    catch(err){
+      next(err);
+    }
+});
 
 // It returns a service with form data
 // GET SERVICE Endpoint

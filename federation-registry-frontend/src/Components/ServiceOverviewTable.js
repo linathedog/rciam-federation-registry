@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTable ,useFilters,useSortBy,usePagination} from 'react-table';
+import { Link ,useParams} from "react-router-dom";
+
 import Pagination from 'react-bootstrap/Pagination';
 import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
@@ -10,7 +12,8 @@ import { useTranslation } from 'react-i18next';
 
 
 const ServiceTable = ({services}) => {
-  const { t, i18n } = useTranslation();
+  const { t} = useTranslation();
+  let {tenant_name} = useParams();
 
     // Define a default UI for filtering
     function SearchFilter({
@@ -83,9 +86,7 @@ const ServiceTable = ({services}) => {
           accessor: 'service_name', // accessor is the "key" in the data
           Cell: props => {
             return (
-              props.row.original.website_url?
-              <span className="home-table-service-name"><a target="_blank" rel="noreferrer" href={props.row.original.website_url}>{props.value}</a></span>:
-              <span className="home-table-service-name">{props.value}</span>
+              <Link to={"/" + tenant_name + "/nodes/"+props.row.original.id+ "/view"}><span className="home-table-service-name">{props.value}</span></Link>
             )
           }
         },
@@ -98,43 +99,43 @@ const ServiceTable = ({services}) => {
             return props.value === null||props.value === "" ? "(not available)" : props.value;
          }
         },
-        { 
-          Header: "Policies",
-          accessor: 'policy_uri',
-          disableFilters: true,
-          disableSortBy: true,
-          Cell: props => {
-            return (
-              <React.Fragment>
-                {(props.value === null||props.value === "")&&(props.row.original.aup_uri === null||props.row.original.aup_uri === "")?
-                  <div style={{marginTop:"0.5rem"}}>
-                    (not available)
-                  </div>
-                :
-                  <React.Fragment>
-                    <div style={{marginTop:"0.5rem"}}>
-                      {props.value === null||props.value === "" ?
-                        "Privacy Policy (not available)" 
-                      : 
-                        <a href={props.value} rel="noreferrer" target="_blank">Privacy Policy</a>
-                      }
-                    </div>
-                    <div style={{marginTop:"0.5rem",marginBottom:"0.5rem"}}>
-                      {props.row.original.aup_uri === null||props.row.original.aup_uri === "" ? 
-                        "Acceptable Use Policy (not available)"
-                      :
-                        <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Acceptable Use Policy</a>
-                      }
-                    </div>
+        // { 
+        //   Header: "Policies",
+        //   accessor: 'policy_uri',
+        //   disableFilters: true,
+        //   disableSortBy: true,
+        //   Cell: props => {
+        //     return (
+        //       <React.Fragment>
+        //         {(props.value === null||props.value === "")&&(props.row.original.aup_uri === null||props.row.original.aup_uri === "")?
+        //           <div style={{marginTop:"0.5rem"}}>
+        //             (not available)
+        //           </div>
+        //         :
+        //           <React.Fragment>
+        //             <div style={{marginTop:"0.5rem"}}>
+        //               {props.value === null||props.value === "" ?
+        //                 "Privacy Policy (not available)" 
+        //               : 
+        //                 <a href={props.value} rel="noreferrer" target="_blank">Privacy Policy</a>
+        //               }
+        //             </div>
+        //             <div style={{marginTop:"0.5rem",marginBottom:"0.5rem"}}>
+        //               {props.row.original.aup_uri === null||props.row.original.aup_uri === "" ? 
+        //                 "Acceptable Use Policy (not available)"
+        //               :
+        //                 <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Acceptable Use Policy</a>
+        //               }
+        //             </div>
   
-                  </React.Fragment>
-                }
-              </React.Fragment>
-              );
-         }
-        }
+        //           </React.Fragment>
+        //         }
+        //       </React.Fragment>
+        //       );
+        //  }
+        // }
       ],
-      []
+      [t,tenant_name]
     )
   
   

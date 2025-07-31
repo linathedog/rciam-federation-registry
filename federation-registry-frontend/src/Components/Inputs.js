@@ -190,12 +190,12 @@ export function OrganizationField(props){
                     if(searchString===item.name){
                       exists = true;
                     }
-                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")] = {};
-                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].name = item.name 
-                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url=(item.links[0]?item.links[0]:"");
-                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].ror_id = item.id;
+                    options[item.name + (item?.acronyms?.length>0?(" (" + item.acronyms[0] +")"):"")] = {};
+                    options[item.name + (item?.acronyms?.length>0?(" (" + item.acronyms[0] +")"):"")].name = item.name 
+                    options[item.name + (item?.acronyms?.length>0?(" (" + item.acronyms[0] +")"):"")].url=(item.links[0]?item.links[0]:"");
+                    options[item.name + (item?.acronyms?.length>0?(" (" + item.acronyms[0] +")"):"")].ror_id = item.id;
                     
-                    if(item.name +(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")===singleSelections[0]&&options[item.name+(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url){
+                    if(item.name +(item?.acronyms?.length>0?(" (" + item.acronyms[0] +")"):"")===singleSelections[0]&&options[item.name+(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url){
                       loaded = true
                     }
                   });

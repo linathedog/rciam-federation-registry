@@ -68,6 +68,7 @@ import {
 import { SamlAttributesInput } from "./Components/SamlAttributes.js";
 import { ConfirmationModal } from "./Components/Modals";
 import MoveDialog from "./Components/MoveDialog";
+import ServiceTypeSelector from "./Components/ServiceTypeSelector";
 
 const { reg } = require("./regex.js");
 var availabilityCheckTimeout;
@@ -1485,6 +1486,11 @@ const ServiceForm = (props) => {
             }
           }),
       }),
+    service_type: yup
+      .string()
+      .nullable()
+      .oneOf(["machine_to_machine", "resource_server", "advanced"])
+      .required(t("yup_required")),
   });
 
   const toggleCopyDialog = () => {
@@ -1831,6 +1837,8 @@ const ServiceForm = (props) => {
     });
     return options;
   };
+
+  const isRegistrationRequest = !service_id && !petition_id && !props.review;
 
   return (
     <React.Fragment>
@@ -2650,933 +2658,1000 @@ const ServiceForm = (props) => {
                           tabErrorCounts.technical,
                         )}
                       >
-                        <InputRow
-                          title={t("form_protocol")}
-                          required={true}
-                          extraClass="select-col"
-                          error={errors.protocol}
-                          touched={touched.protocol}
-                        >
-                          <Select
-                            onBlur={handleBlur}
-                            optionsTitle={[
-                              "Select one option",
-                              ...protocolOptions(tenant.form_config.protocol),
-                            ]}
-                            options={["", ...tenant.form_config.protocol]}
-                            name="protocol"
-                            values={values}
-                            isInvalid={
-                              hasSubmitted
-                                ? !!errors.protocol
-                                : !!errors.protocol && touched.protocol
-                            }
-                            onChange={onProtocolChange}
-                            disabled={disabled || props.initialValues.protocol}
-                            changed={
-                              props.changes ? props.changes.protocol : null
-                            }
-                          />
-                        </InputRow>
-                        {values.protocol === "oidc" ? (
+                        <ServiceTypeSelector
+                          value={values.service_type}
+                          editable={isRegistrationRequest}
+                          onChange={(serviceType) => {
+                            setFieldValue("service_type", serviceType);
+                          }}
+                        />
+
+                        {(!isRegistrationRequest || values.service_type) && (
                           <React.Fragment>
                             <InputRow
-                              moreInfo={tenant.form_config.more_info.client_id}
-                              title={t("form_client_id")}
-                              description={t("form_client_id_desc")}
-                              error={
-                                checkingAvailability ? null : errors.client_id
-                              }
-                              touched={touched.client_id}
+                              title={t("form_protocol")}
+                              required={true}
+                              extraClass="select-col"
+                              error={errors.protocol}
+                              touched={touched.protocol}
                             >
-                              <SimpleInput
-                                name="client_id"
-                                placeholder={t("form_type_prompt")}
-                                onChange={(e) => {
-                                  setFieldTouched("client_id");
-                                  handleChange(e);
-                                }}
-                                copybutton={props.copybutton}
-                                value={values.client_id}
+                              <Select
+                                onBlur={handleBlur}
+                                optionsTitle={[
+                                  "Select one option",
+                                  ...protocolOptions(
+                                    tenant.form_config.protocol,
+                                  ),
+                                ]}
+                                options={["", ...tenant.form_config.protocol]}
+                                name="protocol"
+                                values={values}
                                 isInvalid={
                                   hasSubmitted
-                                    ? !!errors.client_id &&
-                                      !checkingAvailability
-                                    : !!errors.client_id &&
-                                      touched.client_id &&
-                                      !checkingAvailability
+                                    ? !!errors.protocol
+                                    : !!errors.protocol && touched.protocol
                                 }
-                                onBlur={handleBlur}
-                                disabled={disabled || service_id}
+                                onChange={onProtocolChange}
+                                disabled={
+                                  disabled || props.initialValues.protocol
+                                }
                                 changed={
-                                  props.changes ? props.changes.client_id : null
-                                }
-                                isloading={
-                                  values.client_id &&
-                                  values.client_id !== checkedId &&
-                                  checkingAvailability
-                                    ? 1
-                                    : 0
+                                  props.changes ? props.changes.protocol : null
                                 }
                               />
                             </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info.application_type
-                              }
-                              title={"Application Type"}
-                              required={true}
-                              description={""}
-                              error={errors.application_type}
-                              touched={touched.application_type}
-                            >
-                              <SimpleRadio
-                                name="application_type"
-                                onChange={handleChange}
-                                values={values}
-                                radio_items={["WEB", "NATIVE"]}
-                                setFieldValue={setFieldValue}
-                                radio_items_titles={["Web", "Native"]}
-                                value={values.application_type}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.application_type
-                                    : !!errors.application_type &&
-                                      touched.application_type &&
-                                      !checkingAvailability
-                                }
-                                onBlur={handleBlur}
-                                className={"application-type-container"}
-                                disabled={disabled}
-                                changed={
-                                  props.changes
-                                    ? props.changes.application_type
-                                    : null
-                                }
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info.grant_types
-                              }
-                              title={t("form_grant_types")}
-                              error={errors.grant_types}
-                              touched={true}
-                            >
-                              <CheckboxList
-                                name="grant_types"
-                                values={values.grant_types}
-                                listItems={tenant.form_config.grant_types}
-                                disabled={disabled}
-                                deprecated_options={
-                                  tenant.form_config.grant_types_deprecated
-                                }
-                                changed={
-                                  props.changes
-                                    ? props.changes.grant_types
-                                    : null
-                                }
-                                onChange={onGrantTypesChange}
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .token_endpoint_auth_method
-                              }
-                              title="Token Endpoint Authorization Method"
-                              required={true}
-                              error={
-                                !errors.grant_types
-                                  ? errors.token_endpoint_auth_method
-                                  : null
-                              }
-                              touched={touched.token_endpoint_auth_method}
-                            >
-                              <AuthMethRadioList
-                                name="token_endpoint_auth_method"
-                                values={values}
-                                setFieldValue={setFieldValue}
-                                onChange={handleChange}
-                                radio_items={
-                                  tenant.form_config.token_endpoint_auth_method
-                                }
-                                radio_items_titles={
-                                  tenant.form_config
-                                    .token_endpoint_auth_method_title
-                                }
-                                disabled={disabled}
-                                changed={
-                                  props.changes
-                                    ? props.changes.token_endpoint_auth_method
-                                    : null
-                                }
-                              />
-                            </InputRow>
-                            {!(
-                              values.token_endpoint_auth_method ===
-                                "private_key_jwt" ||
-                              values.token_endpoint_auth_method === "none"
-                            ) ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info.client_secret
-                                }
-                                required={true}
-                                title={t("form_client_secret")}
-                              >
-                                <ClientSecret
-                                  onChange={handleChange}
-                                  client_secret={values.client_secret}
-                                  error={errors.client_secret}
-                                  touched={touched.client_secret}
-                                  copybutton={props.copybutton}
-                                  isInvalid={
-                                    hasSubmitted
-                                      ? !!errors.client_secret
-                                      : !!errors.client_secret &&
-                                        touched.client_secret
+                            {values.protocol === "oidc" ? (
+                              <React.Fragment>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info.client_id
                                   }
-                                  onBlur={handleBlur}
-                                  generate_client_secret={
-                                    values.generate_client_secret
+                                  title={t("form_client_id")}
+                                  description={t("form_client_id_desc")}
+                                  error={
+                                    checkingAvailability
+                                      ? null
+                                      : errors.client_id
                                   }
-                                  disabled={disabled}
-                                  changed={
-                                    props.changes
-                                      ? props.changes.client_secret
+                                  touched={touched.client_id}
+                                >
+                                  <SimpleInput
+                                    name="client_id"
+                                    placeholder={t("form_type_prompt")}
+                                    onChange={(e) => {
+                                      setFieldTouched("client_id");
+                                      handleChange(e);
+                                    }}
+                                    copybutton={props.copybutton}
+                                    value={values.client_id}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.client_id &&
+                                          !checkingAvailability
+                                        : !!errors.client_id &&
+                                          touched.client_id &&
+                                          !checkingAvailability
+                                    }
+                                    onBlur={handleBlur}
+                                    disabled={disabled || service_id}
+                                    changed={
+                                      props.changes
+                                        ? props.changes.client_id
+                                        : null
+                                    }
+                                    isloading={
+                                      values.client_id &&
+                                      values.client_id !== checkedId &&
+                                      checkingAvailability
+                                        ? 1
+                                        : 0
+                                    }
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .application_type
+                                  }
+                                  title={"Application Type"}
+                                  required={true}
+                                  description={""}
+                                  error={errors.application_type}
+                                  touched={touched.application_type}
+                                >
+                                  <SimpleRadio
+                                    name="application_type"
+                                    onChange={handleChange}
+                                    values={values}
+                                    radio_items={["WEB", "NATIVE"]}
+                                    setFieldValue={setFieldValue}
+                                    radio_items_titles={["Web", "Native"]}
+                                    value={values.application_type}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.application_type
+                                        : !!errors.application_type &&
+                                          touched.application_type &&
+                                          !checkingAvailability
+                                    }
+                                    onBlur={handleBlur}
+                                    className={"application-type-container"}
+                                    disabled={disabled}
+                                    changed={
+                                      props.changes
+                                        ? props.changes.application_type
+                                        : null
+                                    }
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info.grant_types
+                                  }
+                                  title={t("form_grant_types")}
+                                  error={errors.grant_types}
+                                  touched={true}
+                                >
+                                  <CheckboxList
+                                    name="grant_types"
+                                    values={values.grant_types}
+                                    listItems={tenant.form_config.grant_types}
+                                    disabled={disabled}
+                                    deprecated_options={
+                                      tenant.form_config.grant_types_deprecated
+                                    }
+                                    changed={
+                                      props.changes
+                                        ? props.changes.grant_types
+                                        : null
+                                    }
+                                    onChange={onGrantTypesChange}
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .token_endpoint_auth_method
+                                  }
+                                  title="Token Endpoint Authorization Method"
+                                  required={true}
+                                  error={
+                                    !errors.grant_types
+                                      ? errors.token_endpoint_auth_method
                                       : null
                                   }
-                                />
-                              </InputRow>
-                            ) : null}
-                            {values.token_endpoint_auth_method ===
-                              "private_key_jwt" ||
-                            values.token_endpoint_auth_method ===
-                              "client_secret_jwt" ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info
-                                    .token_endpoint_auth_signing_alg
-                                }
-                                title="Token Endpoint Signing Algorithm"
-                                required={true}
-                                extraClass="select-col"
-                                error={errors.token_endpoint_auth_signing_alg}
-                                touched={
-                                  touched.token_endpoint_auth_signing_alg
-                                }
-                              >
-                                <Select
-                                  onBlur={handleBlur}
-                                  optionsTitle={
-                                    tenant.form_config
-                                      .token_endpoint_auth_signing_alg_title
-                                  }
-                                  options={
-                                    tenant.form_config
-                                      .token_endpoint_auth_signing_alg
-                                  }
-                                  default="RS256"
-                                  name="token_endpoint_auth_signing_alg"
-                                  values={values}
-                                  isInvalid={
-                                    hasSubmitted
-                                      ? !!errors.token_endpoint_auth_signing_alg_title
-                                      : !!errors.token_endpoint_auth_signing_alg &&
-                                        touched.token_endpoint_auth_signing_alg
-                                  }
-                                  onChange={handleChange}
-                                  disabled={disabled}
-                                  changed={
-                                    props.changes
-                                      ? props.changes
+                                  touched={touched.token_endpoint_auth_method}
+                                >
+                                  <AuthMethRadioList
+                                    name="token_endpoint_auth_method"
+                                    values={values}
+                                    setFieldValue={setFieldValue}
+                                    onChange={handleChange}
+                                    radio_items={
+                                      tenant.form_config
+                                        .token_endpoint_auth_method
+                                    }
+                                    radio_items_titles={
+                                      tenant.form_config
+                                        .token_endpoint_auth_method_title
+                                    }
+                                    disabled={disabled}
+                                    changed={
+                                      props.changes
+                                        ? props.changes
+                                            .token_endpoint_auth_method
+                                        : null
+                                    }
+                                  />
+                                </InputRow>
+                                {!(
+                                  values.token_endpoint_auth_method ===
+                                    "private_key_jwt" ||
+                                  values.token_endpoint_auth_method === "none"
+                                ) ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info.client_secret
+                                    }
+                                    required={true}
+                                    title={t("form_client_secret")}
+                                  >
+                                    <ClientSecret
+                                      onChange={handleChange}
+                                      client_secret={values.client_secret}
+                                      error={errors.client_secret}
+                                      touched={touched.client_secret}
+                                      copybutton={props.copybutton}
+                                      isInvalid={
+                                        hasSubmitted
+                                          ? !!errors.client_secret
+                                          : !!errors.client_secret &&
+                                            touched.client_secret
+                                      }
+                                      onBlur={handleBlur}
+                                      generate_client_secret={
+                                        values.generate_client_secret
+                                      }
+                                      disabled={disabled}
+                                      changed={
+                                        props.changes
+                                          ? props.changes.client_secret
+                                          : null
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                                {values.token_endpoint_auth_method ===
+                                  "private_key_jwt" ||
+                                values.token_endpoint_auth_method ===
+                                  "client_secret_jwt" ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info
+                                        .token_endpoint_auth_signing_alg
+                                    }
+                                    title="Token Endpoint Signing Algorithm"
+                                    required={true}
+                                    extraClass="select-col"
+                                    error={
+                                      errors.token_endpoint_auth_signing_alg
+                                    }
+                                    touched={
+                                      touched.token_endpoint_auth_signing_alg
+                                    }
+                                  >
+                                    <Select
+                                      onBlur={handleBlur}
+                                      optionsTitle={
+                                        tenant.form_config
+                                          .token_endpoint_auth_signing_alg_title
+                                      }
+                                      options={
+                                        tenant.form_config
                                           .token_endpoint_auth_signing_alg
-                                      : null
-                                  }
-                                />
-                              </InputRow>
-                            ) : null}
-                            {values.token_endpoint_auth_method ===
-                            "private_key_jwt" ? (
-                              <InputRow
-                                moreInfo={tenant.form_config.more_info.jwks}
-                                title="Public Key Set"
-                                required={true}
-                                extraClass="select-col"
-                                description="URL for the client's JSON Web Key set (must be reachable by the server)"
-                                error={
-                                  errors.jwks ? errors.jwks : errors.jwks_uri
-                                }
-                                touched={touched.jwks || touched.jwks_uri}
-                              >
-                                <PublicKey
-                                  onBlur={handleBlur}
-                                  values={values}
-                                  setvalue={(field, value, validate) =>
-                                    setFieldValue(field, value, validate)
-                                  }
-                                  isInvalid={
-                                    hasSubmitted
-                                      ? errors.jwks_uri || errors.jwks
-                                      : (errors.jwks_uri || errors.jwks) &&
-                                        (touched.jwks || touched.jwks_uri)
-                                  }
-                                  datatype="json"
-                                  onChange={handleChange}
-                                  disabled={disabled}
-                                  changed={
-                                    props.changes &&
-                                    (props.changes.jwks ||
-                                      props.changes.jwks_uri)
-                                      ? true
-                                      : false
-                                  }
-                                />
-                              </InputRow>
-                            ) : null}
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info.allow_introspection
-                              }
-                              title={t("form_allow_introspection")}
-                            >
-                              <div className="simple_checkbox_container">
-                                <SimpleCheckbox
-                                  name="allow_introspection"
-                                  label={t("form_allow_introspection_desc")}
-                                  onChange={handleChange}
-                                  moreinfo={
+                                      }
+                                      default="RS256"
+                                      name="token_endpoint_auth_signing_alg"
+                                      values={values}
+                                      isInvalid={
+                                        hasSubmitted
+                                          ? !!errors.token_endpoint_auth_signing_alg_title
+                                          : !!errors.token_endpoint_auth_signing_alg &&
+                                            touched.token_endpoint_auth_signing_alg
+                                      }
+                                      onChange={handleChange}
+                                      disabled={disabled}
+                                      changed={
+                                        props.changes
+                                          ? props.changes
+                                              .token_endpoint_auth_signing_alg
+                                          : null
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                                {values.token_endpoint_auth_method ===
+                                "private_key_jwt" ? (
+                                  <InputRow
+                                    moreInfo={tenant.form_config.more_info.jwks}
+                                    title="Public Key Set"
+                                    required={true}
+                                    extraClass="select-col"
+                                    description="URL for the client's JSON Web Key set (must be reachable by the server)"
+                                    error={
+                                      errors.jwks
+                                        ? errors.jwks
+                                        : errors.jwks_uri
+                                    }
+                                    touched={touched.jwks || touched.jwks_uri}
+                                  >
+                                    <PublicKey
+                                      onBlur={handleBlur}
+                                      values={values}
+                                      setvalue={(field, value, validate) =>
+                                        setFieldValue(field, value, validate)
+                                      }
+                                      isInvalid={
+                                        hasSubmitted
+                                          ? errors.jwks_uri || errors.jwks
+                                          : (errors.jwks_uri || errors.jwks) &&
+                                            (touched.jwks || touched.jwks_uri)
+                                      }
+                                      datatype="json"
+                                      onChange={handleChange}
+                                      disabled={disabled}
+                                      changed={
+                                        props.changes &&
+                                        (props.changes.jwks ||
+                                          props.changes.jwks_uri)
+                                          ? true
+                                          : false
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                                <InputRow
+                                  moreInfo={
                                     tenant.form_config.more_info
                                       .allow_introspection
                                   }
-                                  disabled={
-                                    disabled ||
-                                    tenant.form_config.dynamic_fields.includes(
-                                      "allow_introspection",
-                                    )
-                                  }
-                                  value={values.allow_introspection}
-                                  changed={
-                                    props.changes
-                                      ? props.changes.allow_introspection
+                                  title={t("form_allow_introspection")}
+                                >
+                                  <div className="simple_checkbox_container">
+                                    <SimpleCheckbox
+                                      name="allow_introspection"
+                                      label={t("form_allow_introspection_desc")}
+                                      onChange={handleChange}
+                                      moreinfo={
+                                        tenant.form_config.more_info
+                                          .allow_introspection
+                                      }
+                                      disabled={
+                                        disabled ||
+                                        tenant.form_config.dynamic_fields.includes(
+                                          "allow_introspection",
+                                        )
+                                      }
+                                      value={values.allow_introspection}
+                                      changed={
+                                        props.changes
+                                          ? props.changes.allow_introspection
+                                          : null
+                                      }
+                                    />
+                                  </div>
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={tenant.form_config.more_info.scope}
+                                  title={t("form_scope")}
+                                  required={values?.grant_types?.length > 0}
+                                  description={t("form_scope_desc")}
+                                  error={
+                                    typeof errors.scope === "string"
+                                      ? errors.scope
                                       : null
                                   }
-                                />
-                              </div>
-                            </InputRow>
-                            <InputRow
-                              moreInfo={tenant.form_config.more_info.scope}
-                              title={t("form_scope")}
-                              required={values?.grant_types?.length > 0}
-                              description={t("form_scope_desc")}
-                              error={
-                                typeof errors.scope === "string"
-                                  ? errors.scope
-                                  : null
-                              }
-                              touched={true}
-                            >
-                              <ListInputArray
-                                name="scope"
-                                values={values.scope}
-                                placeholder={t("form_type_prompt")}
-                                defaultValues={
-                                  scopeApplicable
-                                    ? tenant.form_config.scope
-                                    : tenant.form_config.scope.filter(
-                                        (item) => item !== "offline_access",
-                                      )
-                                }
-                                error={errors.scope}
-                                touched={touched.scope}
-                                disabled={disabled}
-                                onBlur={handleBlur}
-                                changed={
-                                  props.changes ? props.changes.scope : null
-                                }
-                              />
-                            </InputRow>
-                            {redirectUrisApplicable || hasLegacyRedirectUris ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info.redirect_uris
-                                }
-                                title={t("form_redirect_uris")}
-                                required={
-                                  values?.grant_types?.includes("implicit") ||
-                                  values?.grant_types?.includes(
-                                    "authorization_code",
-                                  )
-                                }
-                                error={
-                                  !errors.grant_types &&
-                                  typeof errors.redirect_uris === "string"
-                                    ? errors.redirect_uris
-                                    : null
-                                }
-                                touched={touched.redirect_uris}
-                                description={t("form_redirect_uris_desc")}
-                              >
-                                <ListInput
-                                  values={values.redirect_uris}
-                                  placeholder={t("form_type_prompt")}
-                                  empty={
-                                    typeof errors.redirect_uris === "string"
-                                      ? true
-                                      : false
-                                  }
-                                  name="redirect_uris"
-                                  error={errors.redirect_uris}
-                                  touched={touched.redirect_uris}
-                                  onBlur={handleBlur}
-                                  onChange={handleChange}
-                                  integrationEnvironment={
-                                    values.integration_environment
-                                  }
-                                  setFieldTouched={setFieldTouched}
-                                  disabled={disabled}
-                                  changed={
-                                    props.changes
-                                      ? props.changes.redirect_uris
-                                      : null
-                                  }
-                                />
-                              </InputRow>
-                            ) : null}
-                            {!tenant.form_config.disabled_fields.includes(
-                              "post_logout_redirect_uris",
-                            ) &&
-                            (redirectUrisApplicable ||
-                              hasLegacyPostLogoutRedirectUris) ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info
-                                    .post_logout_redirect_uris
-                                }
-                                title={t("form_redirect_uris")}
-                                error={
-                                  !errors.grant_types &&
-                                  typeof errors.post_logout_redirect_uris ===
-                                    "string"
-                                    ? errors.post_logout_redirect_uris
-                                    : null
-                                }
-                                touched={touched.post_logout_redirect_uris}
-                                description={t("form_redirect_uris_desc")}
-                              >
-                                <ListInput
-                                  values={values.post_logout_redirect_uris}
-                                  placeholder={t("form_type_prompt")}
-                                  empty={
-                                    typeof errors.post_logout_redirect_uris ===
-                                    "string"
-                                      ? true
-                                      : false
-                                  }
-                                  name="post_logout_redirect_uris"
-                                  error={errors.post_logout_redirect_uris}
-                                  touched={touched.post_logout_redirect_uris}
-                                  onBlur={handleBlur}
-                                  onChange={handleChange}
-                                  integrationEnvironment={
-                                    values.integration_environment
-                                  }
-                                  setFieldTouched={setFieldTouched}
-                                  disabled={disabled}
-                                  changed={
-                                    props.changes
-                                      ? props.changes.post_logout_redirect_uris
-                                      : null
-                                  }
-                                />
-                              </InputRow>
-                            ) : null}
-                            {pkceApplicable || hasLegacyPkce ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info
-                                    .code_challenge_method
-                                }
-                                required={true}
-                                title={t("form_code_challenge_method")}
-                                extraClass="select-col"
-                                error={
-                                  !errors.grant_types
-                                    ? errors.code_challenge_method
-                                    : null
-                                }
-                                touched={touched.code_challenge_method}
-                              >
-                                <Select
-                                  onBlur={handleBlur}
-                                  optionsTitle={[
-                                    "PKCE will not be used for this service " +
-                                      (values.grant_types &&
-                                      values.grant_types.includes(
+                                  touched={true}
+                                >
+                                  <ListInputArray
+                                    name="scope"
+                                    values={values.scope}
+                                    placeholder={t("form_type_prompt")}
+                                    defaultValues={
+                                      scopeApplicable
+                                        ? tenant.form_config.scope
+                                        : tenant.form_config.scope.filter(
+                                            (item) => item !== "offline_access",
+                                          )
+                                    }
+                                    error={errors.scope}
+                                    touched={touched.scope}
+                                    disabled={disabled}
+                                    onBlur={handleBlur}
+                                    changed={
+                                      props.changes ? props.changes.scope : null
+                                    }
+                                  />
+                                </InputRow>
+                                {redirectUrisApplicable ||
+                                hasLegacyRedirectUris ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info.redirect_uris
+                                    }
+                                    title={t("form_redirect_uris")}
+                                    required={
+                                      values?.grant_types?.includes(
+                                        "implicit",
+                                      ) ||
+                                      values?.grant_types?.includes(
                                         "authorization_code",
                                       )
-                                        ? "(disabled)"
-                                        : ""),
-                                    "Plain code challenge (deprecated)",
-                                    "SHA-256 hash algorithm (recommended)",
-                                  ]}
-                                  options={["", "plain", "S256"]}
-                                  name="code_challenge_method"
-                                  values={values}
-                                  isInvalid={
-                                    hasSubmitted
-                                      ? !!errors.code_challenge_method
-                                      : !!errors.code_challenge_method &&
-                                        touched.code_challenge_method
+                                    }
+                                    error={
+                                      !errors.grant_types &&
+                                      typeof errors.redirect_uris === "string"
+                                        ? errors.redirect_uris
+                                        : null
+                                    }
+                                    touched={touched.redirect_uris}
+                                    description={t("form_redirect_uris_desc")}
+                                  >
+                                    <ListInput
+                                      values={values.redirect_uris}
+                                      placeholder={t("form_type_prompt")}
+                                      empty={
+                                        typeof errors.redirect_uris === "string"
+                                          ? true
+                                          : false
+                                      }
+                                      name="redirect_uris"
+                                      error={errors.redirect_uris}
+                                      touched={touched.redirect_uris}
+                                      onBlur={handleBlur}
+                                      onChange={handleChange}
+                                      integrationEnvironment={
+                                        values.integration_environment
+                                      }
+                                      setFieldTouched={setFieldTouched}
+                                      disabled={disabled}
+                                      changed={
+                                        props.changes
+                                          ? props.changes.redirect_uris
+                                          : null
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                                {!tenant.form_config.disabled_fields.includes(
+                                  "post_logout_redirect_uris",
+                                ) &&
+                                (redirectUrisApplicable ||
+                                  hasLegacyPostLogoutRedirectUris) ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info
+                                        .post_logout_redirect_uris
+                                    }
+                                    title={t("form_redirect_uris")}
+                                    error={
+                                      !errors.grant_types &&
+                                      typeof errors.post_logout_redirect_uris ===
+                                        "string"
+                                        ? errors.post_logout_redirect_uris
+                                        : null
+                                    }
+                                    touched={touched.post_logout_redirect_uris}
+                                    description={t("form_redirect_uris_desc")}
+                                  >
+                                    <ListInput
+                                      values={values.post_logout_redirect_uris}
+                                      placeholder={t("form_type_prompt")}
+                                      empty={
+                                        typeof errors.post_logout_redirect_uris ===
+                                        "string"
+                                          ? true
+                                          : false
+                                      }
+                                      name="post_logout_redirect_uris"
+                                      error={errors.post_logout_redirect_uris}
+                                      touched={
+                                        touched.post_logout_redirect_uris
+                                      }
+                                      onBlur={handleBlur}
+                                      onChange={handleChange}
+                                      integrationEnvironment={
+                                        values.integration_environment
+                                      }
+                                      setFieldTouched={setFieldTouched}
+                                      disabled={disabled}
+                                      changed={
+                                        props.changes
+                                          ? props.changes
+                                              .post_logout_redirect_uris
+                                          : null
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                                {pkceApplicable || hasLegacyPkce ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info
+                                        .code_challenge_method
+                                    }
+                                    required={true}
+                                    title={t("form_code_challenge_method")}
+                                    extraClass="select-col"
+                                    error={
+                                      !errors.grant_types
+                                        ? errors.code_challenge_method
+                                        : null
+                                    }
+                                    touched={touched.code_challenge_method}
+                                  >
+                                    <Select
+                                      onBlur={handleBlur}
+                                      optionsTitle={[
+                                        "PKCE will not be used for this service " +
+                                          (values.grant_types &&
+                                          values.grant_types.includes(
+                                            "authorization_code",
+                                          )
+                                            ? "(disabled)"
+                                            : ""),
+                                        "Plain code challenge (deprecated)",
+                                        "SHA-256 hash algorithm (recommended)",
+                                      ]}
+                                      options={["", "plain", "S256"]}
+                                      name="code_challenge_method"
+                                      values={values}
+                                      isInvalid={
+                                        hasSubmitted
+                                          ? !!errors.code_challenge_method
+                                          : !!errors.code_challenge_method &&
+                                            touched.code_challenge_method
+                                      }
+                                      onChange={handleChange}
+                                      setFieldValue={(value) => {
+                                        setFieldValue(
+                                          "code_challenge_method",
+                                          value,
+                                        );
+                                      }}
+                                      recommended={"S256"}
+                                      disabled={disabled}
+                                      default={
+                                        values.code_challenge_method
+                                          ? values.code_challenge_method
+                                          : ""
+                                      }
+                                      changed={
+                                        props.changes
+                                          ? props.changes.code_challenge_method
+                                          : null
+                                      }
+                                    />
+                                    <div className="pkce-tooltip">
+                                      <FontAwesomeIcon
+                                        icon={faExclamationTriangle}
+                                      />
+                                      Enabling PKCE is highly recommended to
+                                      avoid code injection and code replay
+                                      attacks. If enabled, you need to make sure
+                                      that your client uses PKCE to prevent
+                                      errors
+                                    </div>
+                                  </InputRow>
+                                ) : null}
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .refresh_token_validity_seconds
                                   }
-                                  onChange={handleChange}
-                                  setFieldValue={(value) => {
-                                    setFieldValue(
-                                      "code_challenge_method",
-                                      value,
-                                    );
-                                  }}
-                                  recommended={"S256"}
-                                  disabled={disabled}
-                                  default={
-                                    values.code_challenge_method
-                                      ? values.code_challenge_method
-                                      : ""
+                                  required={values.scope?.includes(
+                                    "offline_access",
+                                  )}
+                                  title={t(
+                                    "form_refresh_token_validity_seconds",
+                                  )}
+                                  extraClass="time-input"
+                                  error={errors.refresh_token_validity_seconds}
+                                  touched={
+                                    touched.refresh_token_validity_seconds
                                   }
-                                  changed={
-                                    props.changes
-                                      ? props.changes.code_challenge_method
-                                      : null
-                                  }
-                                />
-                                <div className="pkce-tooltip">
-                                  <FontAwesomeIcon
-                                    icon={faExclamationTriangle}
+                                >
+                                  <RefreshToken
+                                    values={values}
+                                    onBlur={handleBlur}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.refresh_token_validity_seconds
+                                        : !!errors.refresh_token_validity_seconds &&
+                                          touched.refresh_token_validity_seconds
+                                    }
+                                    onChange={handleChange}
+                                    disabled={disabled}
+                                    errors={errors}
+                                    description={`${t("form_refresh_token_validity_seconds_desc")} ${t("min_value_is")} ${formatDuration(
+                                      tenant.form_config.more_info
+                                        ?.refresh_token_validity_seconds?.min ??
+                                        1,
+                                    )}. ${t("max_value_is")} ${formatDuration(
+                                      tenant.form_config.more_info
+                                        ?.refresh_token_validity_seconds?.max ??
+                                        tenant.form_config
+                                          .refresh_token_validity_seconds ??
+                                        34560000,
+                                    )}.`}
+                                    setFieldValue={setFieldValue}
+                                    validateField={validateField}
+                                    changed={props.changes}
                                   />
-                                  Enabling PKCE is highly recommended to avoid
-                                  code injection and code replay attacks. If
-                                  enabled, you need to make sure that your
-                                  client uses PKCE to prevent errors
-                                </div>
-                              </InputRow>
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .device_code_validity_seconds
+                                  }
+                                  required={values?.grant_types?.includes(
+                                    "urn:ietf:params:oauth:grant-type:device_code",
+                                  )}
+                                  title={t("form_device_code_validity_seconds")}
+                                  extraClass="time-input"
+                                  error={errors.device_code_validity_seconds}
+                                  touched={touched.device_code_validity_seconds}
+                                >
+                                  <DeviceCode
+                                    onBlur={handleBlur}
+                                    values={values}
+                                    setFieldValue={setFieldValue}
+                                    errors={errors}
+                                    validateField={validateField}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.device_code_validity_seconds
+                                        : !!errors.device_code_validity_seconds &&
+                                          touched.device_code_validity_seconds
+                                    }
+                                    onChange={handleChange}
+                                    disabled={disabled}
+                                    changed={props.changes}
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .access_token_validation_model
+                                  }
+                                  required={true}
+                                  title={t(
+                                    "form_access_token_validation_model",
+                                  )}
+                                  error={errors.access_token_validation_model}
+                                  touched={
+                                    touched.access_token_validation_model
+                                  }
+                                >
+                                  <AccessTokenValidationModel
+                                    name="access_token_validation_model"
+                                    values={values}
+                                    setFieldValue={setFieldValue}
+                                    disabled={disabled}
+                                    changed={
+                                      props.changes
+                                        ? props.changes
+                                            .access_token_validation_model
+                                        : null
+                                    }
+                                    limits={
+                                      tenant.form_config.more_info
+                                        .access_token_validity_seconds.max
+                                    }
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .access_token_validity_seconds
+                                  }
+                                  required={true}
+                                  title={t(
+                                    "form_access_token_validity_seconds",
+                                  )}
+                                  extraClass="time-input"
+                                  error={errors.access_token_validity_seconds}
+                                  touched={
+                                    touched.access_token_validity_seconds
+                                  }
+                                  description={`${t("form_access_token_validity_seconds_desc")} ${t("min_value_is")} ${formatDuration(
+                                    tenant.form_config.more_info
+                                      ?.access_token_validity_seconds?.min ?? 1,
+                                  )}. ${t("max_value_is")} ${formatDuration(
+                                    tenant.form_config.more_info
+                                      ?.access_token_validity_seconds?.max?.[
+                                      values.access_token_validation_model ||
+                                        "OFFLINE_VERIFIABLE"
+                                    ] ??
+                                      tenant.form_config.more_info
+                                        ?.access_token_validity_seconds?.max
+                                        ?.OFFLINE_VERIFIABLE ??
+                                      tenant.form_config
+                                        .access_token_validity_seconds ??
+                                      21600,
+                                  )}.`}
+                                >
+                                  <TimeInput
+                                    name="access_token_validity_seconds"
+                                    value={values.access_token_validity_seconds}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.access_token_validity_seconds
+                                        : !!errors.access_token_validity_seconds &&
+                                          touched.access_token_validity_seconds
+                                    }
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    disabled={disabled}
+                                    changed={
+                                      props.changes
+                                        ? props.changes
+                                            .access_token_validity_seconds
+                                        : null
+                                    }
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info
+                                      .id_token_timeout_seconds
+                                  }
+                                  required={true}
+                                  title={t("form_id_token_timeout_seconds")}
+                                  extraClass="time-input"
+                                  error={errors.id_token_timeout_seconds}
+                                  touched={touched.id_token_timeout_seconds}
+                                  description={t(
+                                    "form_id_token_timeout_seconds_desc",
+                                  )}
+                                >
+                                  <TimeInput
+                                    name="id_token_timeout_seconds"
+                                    value={values.id_token_timeout_seconds}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!errors.id_token_timeout_seconds
+                                        : !!errors.id_token_timeout_seconds &&
+                                          touched.id_token_timeout_seconds
+                                    }
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    disabled={disabled}
+                                    changed={
+                                      props.changes
+                                        ? props.changes.id_token_timeout_seconds
+                                        : null
+                                    }
+                                  />
+                                </InputRow>
+                              </React.Fragment>
                             ) : null}
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .refresh_token_validity_seconds
-                              }
-                              required={values.scope?.includes(
-                                "offline_access",
-                              )}
-                              title={t("form_refresh_token_validity_seconds")}
-                              extraClass="time-input"
-                              error={errors.refresh_token_validity_seconds}
-                              touched={touched.refresh_token_validity_seconds}
-                            >
-                              <RefreshToken
-                                values={values}
-                                onBlur={handleBlur}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.refresh_token_validity_seconds
-                                    : !!errors.refresh_token_validity_seconds &&
-                                      touched.refresh_token_validity_seconds
-                                }
-                                onChange={handleChange}
-                                disabled={disabled}
-                                errors={errors}
-                                description={`${t("form_refresh_token_validity_seconds_desc")} ${t("min_value_is")} ${formatDuration(
-                                  tenant.form_config.more_info
-                                    ?.refresh_token_validity_seconds?.min ?? 1,
-                                )}. ${t("max_value_is")} ${formatDuration(
-                                  tenant.form_config.more_info
-                                    ?.refresh_token_validity_seconds?.max ??
-                                    tenant.form_config
-                                      .refresh_token_validity_seconds ??
-                                    34560000,
-                                )}.`}
-                                setFieldValue={setFieldValue}
-                                validateField={validateField}
-                                changed={props.changes}
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .device_code_validity_seconds
-                              }
-                              required={values?.grant_types?.includes(
-                                "urn:ietf:params:oauth:grant-type:device_code",
-                              )}
-                              title={t("form_device_code_validity_seconds")}
-                              extraClass="time-input"
-                              error={errors.device_code_validity_seconds}
-                              touched={touched.device_code_validity_seconds}
-                            >
-                              <DeviceCode
-                                onBlur={handleBlur}
-                                values={values}
-                                setFieldValue={setFieldValue}
-                                errors={errors}
-                                validateField={validateField}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.device_code_validity_seconds
-                                    : !!errors.device_code_validity_seconds &&
-                                      touched.device_code_validity_seconds
-                                }
-                                onChange={handleChange}
-                                disabled={disabled}
-                                changed={props.changes}
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .access_token_validation_model
-                              }
-                              required={true}
-                              title={t("form_access_token_validation_model")}
-                              error={errors.access_token_validation_model}
-                              touched={touched.access_token_validation_model}
-                            >
-                              <AccessTokenValidationModel
-                                name="access_token_validation_model"
-                                values={values}
-                                setFieldValue={setFieldValue}
-                                disabled={disabled}
-                                changed={
-                                  props.changes
-                                    ? props.changes
-                                        .access_token_validation_model
-                                    : null
-                                }
-                                limits={
-                                  tenant.form_config.more_info
-                                    .access_token_validity_seconds.max
-                                }
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .access_token_validity_seconds
-                              }
-                              required={true}
-                              title={t("form_access_token_validity_seconds")}
-                              extraClass="time-input"
-                              error={errors.access_token_validity_seconds}
-                              touched={touched.access_token_validity_seconds}
-                              description={`${t("form_access_token_validity_seconds_desc")} ${t("min_value_is")} ${formatDuration(
-                                tenant.form_config.more_info
-                                  ?.access_token_validity_seconds?.min ?? 1,
-                              )}. ${t("max_value_is")} ${formatDuration(
-                                tenant.form_config.more_info
-                                  ?.access_token_validity_seconds?.max?.[
-                                  values.access_token_validation_model ||
-                                    "OFFLINE_VERIFIABLE"
-                                ] ??
-                                  tenant.form_config.more_info
-                                    ?.access_token_validity_seconds?.max
-                                    ?.OFFLINE_VERIFIABLE ??
-                                  tenant.form_config
-                                    .access_token_validity_seconds ??
-                                  21600,
-                              )}.`}
-                            >
-                              <TimeInput
-                                name="access_token_validity_seconds"
-                                value={values.access_token_validity_seconds}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.access_token_validity_seconds
-                                    : !!errors.access_token_validity_seconds &&
-                                      touched.access_token_validity_seconds
-                                }
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                disabled={disabled}
-                                changed={
-                                  props.changes
-                                    ? props.changes
-                                        .access_token_validity_seconds
-                                    : null
-                                }
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .id_token_timeout_seconds
-                              }
-                              required={true}
-                              title={t("form_id_token_timeout_seconds")}
-                              extraClass="time-input"
-                              error={errors.id_token_timeout_seconds}
-                              touched={touched.id_token_timeout_seconds}
-                              description={t(
-                                "form_id_token_timeout_seconds_desc",
-                              )}
-                            >
-                              <TimeInput
-                                name="id_token_timeout_seconds"
-                                value={values.id_token_timeout_seconds}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.id_token_timeout_seconds
-                                    : !!errors.id_token_timeout_seconds &&
-                                      touched.id_token_timeout_seconds
-                                }
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                disabled={disabled}
-                                changed={
-                                  props.changes
-                                    ? props.changes.id_token_timeout_seconds
-                                    : null
-                                }
-                              />
-                            </InputRow>
-                          </React.Fragment>
-                        ) : null}
-                        {values.protocol === "saml" ? (
-                          <React.Fragment>
-                            <ConfirmationModal
-                              active={
-                                metadataLoaded.supported_attributes.length >
-                                  0 ||
-                                (metadataLoaded.entity_id &&
-                                  (!values.entity_id ||
-                                    values.entity_id !==
-                                      metadataLoaded.entity_id))
-                                  ? true
-                                  : false
-                              }
-                              close={() => {
-                                if (
-                                  metadataLoaded.supported_attributes.length > 0
-                                ) {
-                                  setMetadataLoaded({
-                                    ...metadataLoaded,
-                                    supported_attributes: [],
-                                  });
-                                } else if (metadataLoaded.entity_id) {
-                                  setMetadataLoaded({
-                                    ...metadataLoaded,
-                                    entity_id: "",
-                                  });
-                                }
-                              }}
-                              action={() => {
-                                if (
-                                  metadataLoaded.supported_attributes.length > 0
-                                ) {
-                                  setFieldValue(
-                                    "requested_attributes",
-                                    metadataLoaded.supported_attributes,
-                                  );
-                                  setMetadataLoaded({
-                                    ...metadataLoaded,
-                                    supported_attributes: [],
-                                  });
-                                } else {
-                                  setFieldValue(
-                                    "entity_id",
-                                    metadataLoaded.entity_id,
-                                  );
-                                  setMetadataLoaded({
-                                    ...metadataLoaded,
-                                    entity_id: "",
-                                  });
-                                }
-                              }}
-                              title={
-                                metadataLoaded.supported_attributes.length > 0
-                                  ? "Do you wish to load the requested attributes contained in the Metadata Url?"
-                                  : metadataLoaded.entity_id &&
-                                      !values.entity_id
-                                    ? "Do you wish to use the Entity Id contained in the Metadata Url?"
-                                    : metadataLoaded.entity_id &&
-                                        metadataLoaded.entity_id !==
-                                          values.entity_id
-                                      ? "The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?"
-                                      : ""
-                              }
-                              message={
-                                metadataLoaded.supported_attributes.length > 0
-                                  ? metadataLoaded.supported_attributes.length +
-                                    (metadataLoaded.unsupported_attributes
-                                      .length > 0
-                                      ? " out of " +
-                                        (metadataLoaded.supported_attributes
-                                          .length +
-                                          metadataLoaded.unsupported_attributes
-                                            .length)
-                                      : "") +
-                                    " attributes found are supported and can be added in the service configuration."
-                                  : metadataLoaded.entity_id &&
+                            {values.protocol === "saml" ? (
+                              <React.Fragment>
+                                <ConfirmationModal
+                                  active={
+                                    metadataLoaded.supported_attributes.length >
+                                      0 ||
+                                    (metadataLoaded.entity_id &&
                                       (!values.entity_id ||
-                                        metadataLoaded.entity_id !==
-                                          values.entity_id)
-                                    ? "Entity Id: " + metadataLoaded.entity_id
-                                    : null
-                              }
-                              accept={"Yes"}
-                              decline={"No"}
-                            />
-                            <InputRow
-                              moreInfo={tenant.form_config.more_info.entity_id}
-                              required={true}
-                              title={t("form_entity_id")}
-                              description={t("form_entity_id_desc")}
-                              error={
-                                checkingAvailability ? null : errors.entity_id
-                              }
-                              touched={touched.entity_id}
-                            >
-                              <SimpleInput
-                                name="entity_id"
-                                placeholder={t("form_type_prompt")}
-                                onChange={(e) => {
-                                  setFieldTouched("entity_id");
-                                  handleChange(e);
-                                }}
-                                value={values.entity_id}
-                                copybutton={props.copybutton}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!(
-                                        errors.entity_id &&
-                                        !checkingAvailability
-                                      )
-                                    : !!errors.entity_id &&
-                                      touched.entity_id &&
-                                      !checkingAvailability
-                                }
-                                onBlur={handleBlur}
-                                disabled={disabled || service_id}
-                                changed={
-                                  props.changes ? props.changes.entity_id : null
-                                }
-                                isloading={
-                                  values.entity_id &&
-                                  values.entity_id !== checkedId &&
-                                  checkingAvailability
-                                    ? 1
-                                    : 0
-                                }
-                              />
-                            </InputRow>
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info.metadata_url
-                              }
-                              required={true}
-                              title={t("form_metadata_url")}
-                              description={t("form_metadata_url_desc")}
-                              error={metadataAsyncError || errors.metadata_url}
-                              touched={touched.metadata_url}
-                            >
-                              <MetadataInput
-                                name="metadata_url"
-                                placeholder="Type something"
-                                onChange={(e) => {
-                                  setMetadataAyncError("");
-                                  setMetadataWarning();
-                                  handleChange(e);
-                                }}
-                                copybutton={props.copybutton}
-                                value={values.metadata_url}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!metadataAsyncError ||
-                                      !!errors.metadata_url
-                                    : (!!metadataAsyncError ||
-                                        !!errors.metadata_url) &&
-                                      touched.metadata_url
-                                }
-                                onBlur={handleBlur}
-                                disabled={disabled}
-                                getmetadata={(metadata_url) => {
-                                  getMetadata(
-                                    metadata_url,
-                                    null,
-                                    (attributes) => {
+                                        values.entity_id !==
+                                          metadataLoaded.entity_id))
+                                      ? true
+                                      : false
+                                  }
+                                  close={() => {
+                                    if (
+                                      metadataLoaded.supported_attributes
+                                        .length > 0
+                                    ) {
+                                      setMetadataLoaded({
+                                        ...metadataLoaded,
+                                        supported_attributes: [],
+                                      });
+                                    } else if (metadataLoaded.entity_id) {
+                                      setMetadataLoaded({
+                                        ...metadataLoaded,
+                                        entity_id: "",
+                                      });
+                                    }
+                                  }}
+                                  action={() => {
+                                    if (
+                                      metadataLoaded.supported_attributes
+                                        .length > 0
+                                    ) {
                                       setFieldValue(
                                         "requested_attributes",
-                                        attributes,
-                                        false,
+                                        metadataLoaded.supported_attributes,
                                       );
-                                    },
-                                  );
-                                }}
-                                changed={
-                                  props.changes
-                                    ? props.changes.metadata_url
-                                    : null
-                                }
-                                isloading={
-                                  values.metadata_url && metadataLoading ? 1 : 0
-                                }
-                              />
-                              <UrlWarning
-                                url={values.metadata_url}
-                                overwriteWarning={metadataWarning}
-                                disableCheck={1}
-                                touched={!!values.metadata_url}
-                              />
-                            </InputRow>
-                            {!tenant.form_config.more_info.requested_attributes
-                              .disabled ? (
-                              <InputRow
-                                moreInfo={
-                                  tenant.form_config.more_info
-                                    .requested_attributes
-                                }
-                                title={
-                                  tenant.form_config.more_info
-                                    .requested_attributes.label || "Attributes"
-                                }
-                                required={false}
-                                description={
-                                  tenant.form_config.more_info
-                                    .requested_attributes.description
-                                }
-                                error={
-                                  typeof errors.scope === "string"
-                                    ? errors.scope
-                                    : null
-                                }
-                                touched={true}
-                              >
-                                <SamlAttributesInput
-                                  name="requested_attributes"
-                                  values={
-                                    values.requested_attributes
-                                      ? values.requested_attributes
-                                      : []
+                                      setMetadataLoaded({
+                                        ...metadataLoaded,
+                                        supported_attributes: [],
+                                      });
+                                    } else {
+                                      setFieldValue(
+                                        "entity_id",
+                                        metadataLoaded.entity_id,
+                                      );
+                                      setMetadataLoaded({
+                                        ...metadataLoaded,
+                                        entity_id: "",
+                                      });
+                                    }
+                                  }}
+                                  title={
+                                    metadataLoaded.supported_attributes.length >
+                                    0
+                                      ? "Do you wish to load the requested attributes contained in the Metadata Url?"
+                                      : metadataLoaded.entity_id &&
+                                          !values.entity_id
+                                        ? "Do you wish to use the Entity Id contained in the Metadata Url?"
+                                        : metadataLoaded.entity_id &&
+                                            metadataLoaded.entity_id !==
+                                              values.entity_id
+                                          ? "The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?"
+                                          : ""
                                   }
-                                  placeholder={t("form_type_prompt")}
-                                  defaultValues={
-                                    tenant.form_config.requested_attributes
+                                  message={
+                                    metadataLoaded.supported_attributes.length >
+                                    0
+                                      ? metadataLoaded.supported_attributes
+                                          .length +
+                                        (metadataLoaded.unsupported_attributes
+                                          .length > 0
+                                          ? " out of " +
+                                            (metadataLoaded.supported_attributes
+                                              .length +
+                                              metadataLoaded
+                                                .unsupported_attributes.length)
+                                          : "") +
+                                        " attributes found are supported and can be added in the service configuration."
+                                      : metadataLoaded.entity_id &&
+                                          (!values.entity_id ||
+                                            metadataLoaded.entity_id !==
+                                              values.entity_id)
+                                        ? "Entity Id: " +
+                                          metadataLoaded.entity_id
+                                        : null
                                   }
-                                  errors={errors.requested_attributes}
-                                  touched={touched.requested_attributes}
-                                  setMetadataLoaded={setMetadataLoaded}
-                                  disabled={disabled}
-                                  setFieldValue={setFieldValue}
-                                  onBlur={handleBlur}
-                                  changed={
-                                    props.changes
-                                      ? props.changes.requested_attributes
-                                      : null
-                                  }
+                                  accept={"Yes"}
+                                  decline={"No"}
                                 />
-                              </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info.entity_id
+                                  }
+                                  required={true}
+                                  title={t("form_entity_id")}
+                                  description={t("form_entity_id_desc")}
+                                  error={
+                                    checkingAvailability
+                                      ? null
+                                      : errors.entity_id
+                                  }
+                                  touched={touched.entity_id}
+                                >
+                                  <SimpleInput
+                                    name="entity_id"
+                                    placeholder={t("form_type_prompt")}
+                                    onChange={(e) => {
+                                      setFieldTouched("entity_id");
+                                      handleChange(e);
+                                    }}
+                                    value={values.entity_id}
+                                    copybutton={props.copybutton}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!(
+                                            errors.entity_id &&
+                                            !checkingAvailability
+                                          )
+                                        : !!errors.entity_id &&
+                                          touched.entity_id &&
+                                          !checkingAvailability
+                                    }
+                                    onBlur={handleBlur}
+                                    disabled={disabled || service_id}
+                                    changed={
+                                      props.changes
+                                        ? props.changes.entity_id
+                                        : null
+                                    }
+                                    isloading={
+                                      values.entity_id &&
+                                      values.entity_id !== checkedId &&
+                                      checkingAvailability
+                                        ? 1
+                                        : 0
+                                    }
+                                  />
+                                </InputRow>
+                                <InputRow
+                                  moreInfo={
+                                    tenant.form_config.more_info.metadata_url
+                                  }
+                                  required={true}
+                                  title={t("form_metadata_url")}
+                                  description={t("form_metadata_url_desc")}
+                                  error={
+                                    metadataAsyncError || errors.metadata_url
+                                  }
+                                  touched={touched.metadata_url}
+                                >
+                                  <MetadataInput
+                                    name="metadata_url"
+                                    placeholder="Type something"
+                                    onChange={(e) => {
+                                      setMetadataAyncError("");
+                                      setMetadataWarning();
+                                      handleChange(e);
+                                    }}
+                                    copybutton={props.copybutton}
+                                    value={values.metadata_url}
+                                    isInvalid={
+                                      hasSubmitted
+                                        ? !!metadataAsyncError ||
+                                          !!errors.metadata_url
+                                        : (!!metadataAsyncError ||
+                                            !!errors.metadata_url) &&
+                                          touched.metadata_url
+                                    }
+                                    onBlur={handleBlur}
+                                    disabled={disabled}
+                                    getmetadata={(metadata_url) => {
+                                      getMetadata(
+                                        metadata_url,
+                                        null,
+                                        (attributes) => {
+                                          setFieldValue(
+                                            "requested_attributes",
+                                            attributes,
+                                            false,
+                                          );
+                                        },
+                                      );
+                                    }}
+                                    changed={
+                                      props.changes
+                                        ? props.changes.metadata_url
+                                        : null
+                                    }
+                                    isloading={
+                                      values.metadata_url && metadataLoading
+                                        ? 1
+                                        : 0
+                                    }
+                                  />
+                                  <UrlWarning
+                                    url={values.metadata_url}
+                                    overwriteWarning={metadataWarning}
+                                    disableCheck={1}
+                                    touched={!!values.metadata_url}
+                                  />
+                                </InputRow>
+                                {!tenant.form_config.more_info
+                                  .requested_attributes.disabled ? (
+                                  <InputRow
+                                    moreInfo={
+                                      tenant.form_config.more_info
+                                        .requested_attributes
+                                    }
+                                    title={
+                                      tenant.form_config.more_info
+                                        .requested_attributes.label ||
+                                      "Attributes"
+                                    }
+                                    required={false}
+                                    description={
+                                      tenant.form_config.more_info
+                                        .requested_attributes.description
+                                    }
+                                    error={
+                                      typeof errors.scope === "string"
+                                        ? errors.scope
+                                        : null
+                                    }
+                                    touched={true}
+                                  >
+                                    <SamlAttributesInput
+                                      name="requested_attributes"
+                                      values={
+                                        values.requested_attributes
+                                          ? values.requested_attributes
+                                          : []
+                                      }
+                                      placeholder={t("form_type_prompt")}
+                                      defaultValues={
+                                        tenant.form_config.requested_attributes
+                                      }
+                                      errors={errors.requested_attributes}
+                                      touched={touched.requested_attributes}
+                                      setMetadataLoaded={setMetadataLoaded}
+                                      disabled={disabled}
+                                      setFieldValue={setFieldValue}
+                                      onBlur={handleBlur}
+                                      changed={
+                                        props.changes
+                                          ? props.changes.requested_attributes
+                                          : null
+                                      }
+                                    />
+                                  </InputRow>
+                                ) : null}
+                              </React.Fragment>
                             ) : null}
                           </React.Fragment>
-                        ) : null}
+                        )}
                       </Tab>
                       <Tab
                         eventKey="policy"

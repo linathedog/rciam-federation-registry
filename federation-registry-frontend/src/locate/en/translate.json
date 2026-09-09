@@ -266,6 +266,18 @@
     "redirect_uri_grant_type_error": "Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Redirect URIs or select a compatible grant type.",
     "post_logout_redirect_uri_grant_type_error": "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.",
     "pkce_grant_type_error": "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.",
-    "offline_access_grant_type_error": "Offline Access is only supported when Authorization Code or Device Authorization is selected. Remove Offline Access or select a compatible grant type."
+    "offline_access_grant_type_error": "Offline Access is only supported when Authorization Code or Device Authorization is selected. Remove Offline Access or select a compatible grant type.",
+    "service_type": "Service Type",
+    "service_type_description": "Choose the type of service you want to register. Only the relevant configuration options will be shown.",
+    "service_type_select_title": "Select a service type to continue",
+    "service_type_select_description": "The available configuration options will depend on the type of service you are registering.",
+    "service_type_m2m": "Machine-to-Machine (M2M)",
+    "service_type_m2m_description": "For non-interactive backend services communicating directly with other services. Uses the OAuth 2.0 Client Credentials grant.",
+    "service_type_resource_server": "Resource Server (API)",
+    "service_type_resource_server_description": "For APIs and protected resources that validate access tokens issued by the Federation. Does not authenticate users directly.",
+    "service_type_advanced": "Advanced / Custom",
+    "service_type_advanced_description": "Configure all available protocol and OAuth/OIDC options manually. Recommended for advanced or unsupported use cases.",
+    "service_type_help_title": "Need help choosing?",
+    "service_type_help_description": "Select the option that best matches your use case. You can change the selected service type while registering the service."
   }
 }

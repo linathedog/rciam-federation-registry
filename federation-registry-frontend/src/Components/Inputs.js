@@ -893,7 +893,7 @@ export function SelectEnvironment(props) {
             <Button
               className="copy_button"
               variant="success"
-              onClick={() => props.toggleCopyDialog()}
+              onClick={() => props.toggleCopyMoveDialog()}
             >
               +
             </Button>

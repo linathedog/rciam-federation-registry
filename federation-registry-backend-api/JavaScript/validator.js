@@ -903,6 +903,21 @@ const serviceValidationRules = (options, req) => {
           return true;
         }
       }),
+    body("*.service_type")
+      .custom((value, { req, path }) => {
+        return required(value, req, path.match(/\[(.*?)\]/)[1], "service_type");
+      })
+      .withMessage("Service type missing")
+      .if((value) => isNotEmpty(value))
+      .isString()
+      .withMessage("Service type must be a string")
+      .bail()
+      .custom((value) => {
+        return ["machine_to_machine", "resource_server", "advanced"].includes(
+          value,
+        );
+      })
+      .withMessage("Invalid service_type value"),
     body("*.protocol")
       .exists({ checkFalsy: true })
       .withMessage("Protocol missing")

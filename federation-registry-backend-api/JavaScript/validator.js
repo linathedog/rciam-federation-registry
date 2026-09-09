@@ -315,6 +315,22 @@ const postAgentValidation = () => {
   ];
 };
 
+const supportsIdToken = (service) => {
+  if (service.protocol !== "oidc") {
+    return false;
+  }
+
+  const grantTypes = Array.isArray(service.grant_types)
+    ? service.grant_types
+    : [];
+
+  return (
+    grantTypes.includes("authorization_code") ||
+    grantTypes.includes("implicit") ||
+    grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code")
+  );
+};
+
 const postBannerAlertValidation = () => {
   return [
     param("tenant")
@@ -906,6 +922,21 @@ const serviceValidationRules = (options, req) => {
           return true;
         }
       }),
+    body("*.service_type")
+      .custom((value, { req, path }) => {
+        return required(value, req, path.match(/\[(.*?)\]/)[1], "service_type");
+      })
+      .withMessage("Service type missing")
+      .if((value) => isNotEmpty(value))
+      .isString()
+      .withMessage("Service type must be a string")
+      .bail()
+      .custom((value) => {
+        return ["machine_to_machine", "resource_server", "advanced"].includes(
+          value,
+        );
+      })
+      .withMessage("Invalid service_type value"),
     body("*.protocol")
       .exists({ checkFalsy: true })
       .withMessage("Protocol missing")
@@ -1251,40 +1282,49 @@ const serviceValidationRules = (options, req) => {
         return value;
       }),
     body("*.scope")
-      .custom((value, { req, location, path }) => {
-        grant_types = req.body[path.match(/\[(.*?)\]/)[1]].grant_types;
-        return (
-          requiredOidc(value, req, path.match(/\[(.*?)\]/)[1], "scope") ||
-          !grant_types?.length > 0
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+
+        if (service.protocol !== "oidc") {
+          return true;
+        }
+
+        const clientCredentialsOnly =
+          grantTypes.length === 1 && grantTypes[0] === "client_credentials";
+        // Scope is not required when no grant type is configured
+        // or when Client Credentials is the selected grant type.
+        if (grantTypes.length === 0 || clientCredentialsOnly) {
+          return true;
+        }
+
+        return requiredOidc(value, req, pos, "scope");
       })
       .withMessage("Service scope missing")
-      .if((value, { req, location, path }) => {
+
+      // Validate scope contents only when scopes have actually been provided.
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+
         return (
-          value &&
-          value.length > 0 &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
+          service.protocol === "oidc" &&
+          Array.isArray(value) &&
+          value.length > 0
         );
       })
+
       .isArray({ min: 1 })
       .withMessage("Must be an array")
-      .custom((value, success = true) => {
-        try {
-          value.map((item, index) => {
-            if (!item.match(reg.regScope)) {
-              reuse_refresh_token("Invalid Scope Value");
-              reuse_refresh_token(item);
-              success = false;
-            }
-          });
-        } catch (err) {
-          if (Array.isArray(value)) {
-            success = false;
-          } else {
-            success = true;
-          }
-        }
-        return success;
+
+      .custom((value) => {
+        return value.every(
+          (item) => typeof item === "string" && reg.regScope.test(item),
+        );
       })
       .withMessage("Invalid Scope value")
       .custom((value, { req, path }) => {
@@ -1513,21 +1553,16 @@ const serviceValidationRules = (options, req) => {
           "urn:ietf:params:oauth:grant-type:token-exchange",
         );
         if (
-          (hasClientCredentials ||
-            hasTokenExchange ||
-            grantTypes.length === 0) &&
+          (hasClientCredentials || hasTokenExchange) &&
           value === "none"
         ) {
           let message;
           if (hasClientCredentials) {
             message =
               "Client Credentials requires client authentication. Select a token endpoint authentication method other than No authentication.";
-          } else if (hasTokenExchange) {
-            message =
-              "Token Exchange requires client authentication. Select a token endpoint authentication method other than No authentication.";
           } else {
             message =
-              "Resource Server configurations require client authentication. Select a token endpoint authentication method other than No authentication.";
+              "Token Exchange requires client authentication. Select a token endpoint authentication method other than No authentication.";
           }
           return compatibilityError(
             value,
@@ -1593,35 +1628,36 @@ const serviceValidationRules = (options, req) => {
       .customSanitizer((value) => {
         return sanitizeInteger(value);
       })
-      .custom((value, { req, location, path }) => {
-        return requiredOidc(
-          value,
-          req,
-          path.match(/\[(.*?)\]/)[1],
-          "id_token_timeout_seconds",
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (!supportsIdToken(service)) {
+          return true;
+        }
+        return requiredOidc(value, req, pos, "id_token_timeout_seconds");
       })
       .withMessage("id_token_timeout_seconds missing")
-      .if((value, { req, location, path }) => {
-        return (
-          isNotEmpty(value) &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
-        );
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        return isNotEmpty(value) && supportsIdToken(req.body[pos]);
       })
-      .custom((value, { req, location, path }) => {
-        let tenant = options.tenant_param
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const tenant = options.tenant_param
           ? req.params.tenant
-          : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = tenant_config[tenant].form.id_token_timeout_seconds;
+          : req.body[pos].tenant;
+        const max =
+          tenant_config[tenant].form.more_info?.id_token_timeout_seconds?.max ??
+          tenant_config[tenant].form.id_token_timeout_seconds ??
+          86400;
         if (isEmpty(value) || (value <= max && value >= 1)) {
           return true;
-        } else {
-          throw new Error(
-            "id_token_timeout_seconds must be an integer in specified range [1-" +
-              max +
-              "]",
-          );
         }
+        throw new Error(
+          "id_token_timeout_seconds must be an integer in specified range [1-" +
+            max +
+            "]",
+        );
       }),
     body("*.access_token_validation_model").custom(
       (value, { req, location, path }) => {
@@ -1652,46 +1688,54 @@ const serviceValidationRules = (options, req) => {
       .customSanitizer((value) => {
         return sanitizeInteger(value);
       })
-      .custom((value, { req, location, path }) => {
-        return requiredOidc(
-          value,
-          req,
-          path.match(/\[(.*?)\]/)[1],
-          "access_token_validity_seconds",
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        const grantTypes = service.grant_types ?? [];
+
+        // Access Token Lifetime is not applicable to an OIDC Resource Server
+        // with no grant types.
+        if (
+          service.protocol === "oidc" &&
+          Array.isArray(grantTypes) &&
+          grantTypes.length === 0
+        ) {
+          return true;
+        }
+
+        return requiredOidc(value, req, pos, "access_token_validity_seconds");
       })
       .withMessage("access_token_validity_seconds missing")
-      .if((value, { req, location, path }) => {
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        const grantTypes = service.grant_types ?? [];
+
         return (
           isNotEmpty(value) &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
+          service.protocol === "oidc" &&
+          Array.isArray(grantTypes) &&
+          grantTypes.length > 0
         );
       })
-      .custom((value, { req, location, path }) => {
+      .custom((value, { req, path }) => {
         const pos = path.match(/\[(.*?)\]/)[1];
-
         const tenant = options.tenant_param
           ? req.params.tenant
           : req.body[pos].tenant;
-
         const validationModel =
           req.body[pos].access_token_validation_model || "OFFLINE_VERIFIABLE";
-
         const config =
           tenant_config[tenant].form.more_info?.access_token_validity_seconds;
-
         const min = config?.min ?? 1;
-
         const max =
           config?.max?.[validationModel] ??
           config?.max?.OFFLINE_VERIFIABLE ??
           tenant_config[tenant].form.access_token_validity_seconds ??
           21600;
-
-        if (isNotEmpty(value) && value <= max && value >= min) {
+        if (value <= max && value >= min) {
           return true;
         }
-
         throw new Error(
           `access_token_validity_seconds must be an integer in specified range [${min}-${max}]`,
         );

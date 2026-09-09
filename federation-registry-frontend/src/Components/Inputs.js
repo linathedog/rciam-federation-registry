@@ -483,9 +483,9 @@ export function SimpleRadio(props) {
                 {({ field, form }) => (
                   <React.Fragment>
                     <span
-                      onClick={() => {
-                        setFieldValue(props.name, item);
-                      }}
+                      onClick={() =>
+                        !props.disabled && setFieldValue(props.name, item)
+                      }
                       className={
                         "form_radio_item " +
                         (props.changed && props.values[props.name] === item
@@ -893,7 +893,7 @@ export function SelectEnvironment(props) {
             <Button
               className="copy_button"
               variant="success"
-              onClick={() => props.toggleCopyDialog()}
+              onClick={() => props.toggleCopyMoveDialog()}
             >
               +
             </Button>
@@ -1175,7 +1175,7 @@ export function RefreshToken(props) {
           >
             {!tenant.form_config.disabled_fields.includes(
               "clear_access_tokens_on_refresh"
-            ) ? (
+            ) && (
               <SimpleCheckbox
                 name="clear_access_tokens_on_refresh"
                 label={t("form_clear_access_tokens_on_refresh")}
@@ -1188,7 +1188,7 @@ export function RefreshToken(props) {
                 onChange={props.onChange}
                 disabled={props.disabled}
               />
-            ) : null}
+            )}
           </div>
           <TimeInput
             name="refresh_token_validity_seconds"
@@ -1252,24 +1252,7 @@ export function DeviceCode(props) {
           name="grant_types"
           disabled={props.disabled}
           value="urn:ietf:params:oauth:grant-type:device_code"
-          onClick={() => {
-            if (
-              !props.values?.grant_types?.includes(
-                "urn:ietf:params:oauth:grant-type:device_code"
-              ) &&
-              props.values.device_code_validity_seconds === null
-            ) {
-              props
-                .setFieldValue(
-                  "device_code_validity_seconds",
-                  initialValues.device_code_validity_seconds,
-                  true
-                )
-                .then(() => {
-                  props.validateField("device_code_validity_seconds");
-                });
-            }
-          }}
+          onChange={props.onGrantTypesChange}
         />
         {t("form_device_code_desc")}
         <MyOverLay

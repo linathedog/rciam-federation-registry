@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "test": "./test.sh",
-    "test-docker": "NODE_ENV=test-docker mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit"
+    "test-docker": "./test.sh test-docker",
+    "test:setup": "mocha './JavaScript/test/reset-db.test.js'"
   },
   "author": {
     "name": "Andreas Kozadinos",

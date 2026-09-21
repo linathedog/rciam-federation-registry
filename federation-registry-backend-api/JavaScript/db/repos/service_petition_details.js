@@ -21,6 +21,7 @@ class ServicePetitionDetailsRepository {
     async add(body,sub){
       return this.db.one(sql.add,{
         service_description: body.service_description,
+        service_type: body.service_type,
         service_name: body.service_name,
         logo_uri: body.logo_uri,
         policy_uri: body.policy_uri,
@@ -43,6 +44,7 @@ class ServicePetitionDetailsRepository {
     async update(body,id){
         return this.db.none(sql.update,{
           service_description: body.service_description,
+          service_type: body.service_type,
           service_name: body.service_name,
           logo_uri: body.logo_uri,
           country: body.country,
@@ -198,7 +200,7 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name','country',
-          'logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url'],
+          'logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url','service_type'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }
